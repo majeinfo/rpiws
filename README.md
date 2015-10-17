@@ -8,3 +8,4 @@ Once you copied the files from GIT repository, run "npm install" to install Node
 Then copy config/local.tpl.js into config/local.js and change the hostname value with the IP address of
 the Raspberry Pi device if needed
 
+This application is started by the command "npm start".
