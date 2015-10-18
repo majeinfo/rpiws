@@ -4,7 +4,7 @@ var express = require('express'),
     logger = require('morgan'),
     cookieParser = require('cookie-parser'),
     bodyParser = require('body-parser'),
-    config = require('./config/local.js');
+    config = require('./config/local'),
     proxy = require('./modules/proxy');
 
 // Ajouter la notion de plugins chargés dynamiquement
