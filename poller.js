@@ -5,11 +5,28 @@
 var config = require('./config/local.js');
 var proxy = require('./modules/proxy');
 var http = require('http');
+var fs = require('fs');
+ 
+// Read the zid:
+//var contents = fs.readFileSync('/etc/zbw/userid', 'utf8');
+//console.log(contents);
+var zid = '34601';
+var fullDeviceListSent = false;
 
 function sendFullDeviceList(data)
 {
 	if (!data) { return; }
-	proxy._mkpost('/poller/devices', data, false);
+	data = JSON.parse(data)
+	data['zid'] = zid;
+	data['updated'] = Date.now(); // TODO: les dates sont en UTC ?????
+	proxy._mkpost('/poller/devices', JSON.stringify(data), function(err) {
+		if (err === false) {
+			console.log('FullDeviceList not sent: retry...');
+		}
+		else {
+			fullDeviceListSent = true;
+		}
+	});
 }
 
 function getFullDeviceList(next) 
@@ -37,7 +54,10 @@ function getFullDeviceList(next)
 function sendDeltaDeviceList(data)
 {
 	if (!data) { return; }
-	proxy._mkpost('/poller/devices', data, false);
+	data = JSON.parse(data)
+	data['zid'] = zid;
+	data['updated'] = Date.now(); // TODO: les dates sont en UTC ?????
+	proxy._mkpost('/poller/devices', JSON.stringify(data), false);
 }
 
 function getDeltaDeviceList(next)
@@ -65,14 +85,17 @@ function getDeltaDeviceList(next)
 function poller() 
 {
 	console.log('poller');
-	getDeltaDeviceList(sendDeltaDeviceList);
+	if (fullDeviceListSent)
+		getDeltaDeviceList(sendDeltaDeviceList);
+	else
+		getFullDeviceList(sendFullDeviceList);
 }
 
 // Set parameters:
 proxy.connect(config.poll_externalSrvHost, config.poll_externalSrvPort);
 
 // When launched, send the full device list description to the external web server
-getFullDeviceList(sendFullDeviceList);
+//getFullDeviceList(sendFullDeviceList);
 
 // Now, launch the poller that will send the delta device list on regular basis
 setInterval(poller, config.poll_interval * 1000);
