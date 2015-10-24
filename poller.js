@@ -11,6 +11,7 @@ var fs = require('fs');
 //var contents = fs.readFileSync('/etc/zbw/userid', 'utf8');
 //console.log(contents);
 var zid = '34601';
+var key = '1234';
 var fullDeviceListSent = false;
 
 function sendFullDeviceList(data)
@@ -18,6 +19,7 @@ function sendFullDeviceList(data)
 	if (!data) { return; }
 	data = JSON.parse(data)
 	data['zid'] = zid;
+	data['key'] = key;
 	data['updated'] = Date.now(); // TODO: les dates sont en UTC ?????
 	proxy._mkpost('/poller/devices', JSON.stringify(data), function(err) {
 		if (err === false) {
@@ -56,6 +58,7 @@ function sendDeltaDeviceList(data)
 	if (!data) { return; }
 	data = JSON.parse(data)
 	data['zid'] = zid;
+	data['key'] = key;
 	data['updated'] = Date.now(); // TODO: les dates sont en UTC ?????
 	proxy._mkpost('/poller/devices', JSON.stringify(data), false);
 }
