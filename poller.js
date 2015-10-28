@@ -10,31 +10,17 @@ var fs = require('fs');
 // Read the zid:
 //var contents = fs.readFileSync('/etc/zbw/userid', 'utf8');
 //console.log(contents);
-var zid = '34601';
-var key = '1234';
+var zid = '34601';	// TODO ????
+var key = '1234';	// TODO ????
 var fullDeviceListSent = false;
 
-function sendFullDeviceList(data)
-{
-	if (!data) { return; }
-	data = JSON.parse(data)
-	data['zid'] = zid;
-	data['key'] = key;
-	data['updated'] = Date.now(); // TODO: les dates sont en UTC ?????
-	proxy._mkpost('/poller/devices', JSON.stringify(data), function(err) {
-		if (err === false) {
-			console.log('FullDeviceList not sent: retry...');
-		}
-		else {
-			fullDeviceListSent = true;
-		}
-	});
-}
-
-function getFullDeviceList(next) 
+/**
+ * Do a GET Request to the internal interface
+ **/
+function doGet(url, next)
 {
 	var headers = {};
-        var options = { method: 'GET', path: '/sensors/list', port: config.poll_srvPort, hostname: config.poll_srvHost, headers: headers };
+        var options = { method: 'GET', path: url, port: config.poll_srvPort, hostname: config.poll_srvHost, headers: headers };
         console.log(options);
         var body = '';
         sock = http.get(options, function(res) {
@@ -44,13 +30,74 @@ function getFullDeviceList(next)
                 });
                 res.on('end', function() {
                         console.log('no more data');
-                        next(body);
+                        if (next) next(body);
                 });
         });
         sock.on('error', function(e) {
                 console.log('problem with request: ' + e.message);
-                next(false)
+                if (next) next(false)
         });
+}
+
+/**
+ * Update the current Configuration
+ **/
+function updateConf()
+{
+}
+
+/**
+ * Handle a command and send it to the internal interface
+ */
+function handleCommand(resp) 
+{
+	var response = JSON.parse(resp);
+	console.log(response);
+	if (!response.cmd || !response.cmd.length) return;
+
+	// TODO: check the command is newer than the latest action ?
+	// Commands are contained in an Array
+	console.log('Commands detected !');
+	var cmds = response.cmd;
+	for (i in cmds) {
+		var cmd = cmds[i];
+		console.log('Command:', cmd);
+		if (cmd.cmd == 'on' || cmd.cmd == 'off') {
+			if (!cmd.sid) {
+				console.log('Missing sid with handleCommand:', cmd);
+				return;
+			}
+			doGet('/sensors/command/' + cmd.sid + '/' + cmd.cmd, false);
+			return;
+		}
+	}
+}
+
+/**
+ * Send the full device list to domopi
+ * and handles the back-command if needed
+ */
+function sendFullDeviceList(data)
+{
+	if (!data) { return; }
+	data = JSON.parse(data)
+	data['zid'] = zid;
+	data['key'] = key;
+	data['updated'] = Date.now(); // TODO: les dates sont en UTC ?????
+	proxy._mkpost('/poller/devices', JSON.stringify(data), function(resp) {
+		if (resp === false) {
+			console.log('FullDeviceList not sent: retry...');
+		}
+		else {
+			fullDeviceListSent = true;
+			handleCommand(resp); 
+		}
+	});
+}
+
+function getFullDeviceList(next) 
+{
+	doGet('/sensors/list', next);
 }
 
 function sendDeltaDeviceList(data)
@@ -60,29 +107,19 @@ function sendDeltaDeviceList(data)
 	data['zid'] = zid;
 	data['key'] = key;
 	data['updated'] = Date.now(); // TODO: les dates sont en UTC ?????
-	proxy._mkpost('/poller/devices', JSON.stringify(data), false);
+	proxy._mkpost('/poller/devices', JSON.stringify(data), function(resp) {
+		if (resp === false) {
+			console.log('DeltaDeviceList not sent: retry...');
+		}
+		else {
+			handleCommand(resp); 
+		}
+	});
 }
 
 function getDeltaDeviceList(next)
 {
-	var headers = {};
-        var options = { method: 'GET', path: '/sensors/deltalist', port: config.poll_srvPort, hostname: config.poll_srvHost, headers: headers };
-        console.log(options);
-        var body = '';
-        sock = http.get(options, function(res) {
-                console.log('STATUS: ' + res.statusCode);
-                res.on('data', function(chunk) {
-                        body += chunk;
-                });
-                res.on('end', function() {
-                        console.log('no more data');
-                        next(body);
-                });
-        });
-        sock.on('error', function(e) {
-                console.log('problem with request: ' + e.message);
-                next(false)
-        });
+	doGet('/sensors/deltalist', next);
 }
 
 function poller() 

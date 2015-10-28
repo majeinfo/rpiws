@@ -27,6 +27,7 @@ function _mkget(url, next) {
 			body += chunk;
 		});
 		res.on('end', function() {
+			console.log(body);
 			console.log('no more data');
 			if (next) next(body);
 		});
@@ -72,6 +73,7 @@ function _mkpost(url, data, next) {
 			body += chunk;
 		});
 		res.on('end', function() {
+			console.log(body);
 			console.log('no more data');
 			if (next) next(body);
 		});

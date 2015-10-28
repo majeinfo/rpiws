@@ -17,9 +17,6 @@ var proxy = require('../modules/proxy');
 /**
  * Filter ZWave API from device description
  **/
-// NOTE: il faut aussi remonter: location, metrics et tags
-// 	 l'état des appareils est donné par 'metrics'
-
 function _filterData(body) 
 {
 	var obj = JSON.parse(body);
@@ -64,7 +61,9 @@ router.get('/list', function(req, res, next) {
  * GET sensor delta listing 
  */
 router.get('/deltalist', function(req, res, next) {
-        proxy.mkget('/ZAutomation/api/v1/devices?since=' + Math.round(Date.now() / 1000), function(body) {
+	// TODO: le temps doit être calculé par l'appelant... là on prend -10s parce qu'on sait que le poller polle toutes les 10s
+	// il faut donc ajouter un paramètre à cette fonction
+        proxy.mkget('/ZAutomation/api/v1/devices?since=' + Math.round((Date.now() / 1000) - 10), function(body) {
 		if (!body) {
 			res.json({ status: 'error' });
 			return;
