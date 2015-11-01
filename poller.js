@@ -7,11 +7,17 @@ var proxy = require('./modules/proxy');
 var http = require('http');
 var fs = require('fs');
  
+// TODO: clean exit in case of file missing
+// TODO: send alert to ???? in case of errors ????
 // Read the zid:
-//var contents = fs.readFileSync('/etc/zbw/userid', 'utf8');
-//console.log(contents);
-var zid = '34601';	// TODO ????
-var key = '1234';	// TODO ????
+var contents = fs.readFileSync('/etc/zbw/userid', 'utf8');
+console.log(contents);
+//var zid = '34601';	
+var zid = contents.split('\n')[0];
+var contents = fs.readFileSync('/etc/domopi/config.js', 'utf8');
+console.log(contents);
+//var key = '1234';
+var key = contents.split('\n')[0];
 var fullDeviceListSent = false;
 
 /**
