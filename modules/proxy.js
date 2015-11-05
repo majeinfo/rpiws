@@ -41,7 +41,6 @@ function _mkget(url, next) {
 function _mkpost(url, data, next) {
 	console.log(url);
 	var headers = { 
-		//'Content-Type': 'application/x-www-form-urlencoded', 
 		'Content-Type': 'application/json;charset=utf-8', 
 		'Content-Length': Buffer.byteLength(data),
 		'Accept': 'application/json, text/plain, */*'
@@ -86,6 +85,54 @@ function _mkpost(url, data, next) {
 	sock.end(); 
 };
 
+function _mkput(url, data, next) {
+	console.log(url);
+	var headers = { 
+		//'Content-Type': 'application/x-www-form-urlencoded', 
+		'Content-Type': 'application/json;charset=utf-8', 
+		'Content-Length': Buffer.byteLength(data),
+		'Accept': 'application/json, text/plain, */*'
+	};
+
+	if (sess_cookie) { headers.Cookie = sess_cookie };
+	var options = { 
+		method: 'PUT', 
+		path: url, 
+		port: srvPort, 
+		hostname: srvHost, 
+		headers: headers,
+	};
+	console.log(options);
+	var body = '';
+	sock = http.request(options, function(res) {
+		console.log('STATUS: ' + res.statusCode);
+		console.log(res.headers['set-cookie']);
+		if (res.headers['set-cookie']) {
+			var responseCookies = res.headers['set-cookie'];
+        		for ( var i=0; i<responseCookies.length; i++) {
+				var oneCookie = responseCookies[i];
+				oneCookie = oneCookie.split(';');
+				sess_cookie += oneCookie[0]+';';
+			}
+			console.log('got cookie ! ', sess_cookie);
+		}
+		res.on('data', function(chunk) {
+			body += chunk;
+		});
+		res.on('end', function() {
+			console.log(body);
+			console.log('no more data');
+			if (next) next(body);
+		});
+	});
+	sock.on('error', function(e) {
+		console.log('problem with request: ' + e.message);
+		if (next) next(false)
+	});
+	sock.write(data); 
+	sock.end(); 
+};
+
 function loginAndGetCookie(method, url, data, next) {
 	var auth_data = { login: config.proxy_username, password: config.proxy_password };
 	//{"form":true,"login":"admin","password":"admin","keepme":false,"default_ui":1}
@@ -94,11 +141,23 @@ function loginAndGetCookie(method, url, data, next) {
 		if (method == 'POST') {
 			_mkpost(url, data, next);
 		}
-		else {
+		else if (method == 'PUT') {
+			_mkput(url, data, next);
+		}
+		else {	// GET
 			_mkget(url, next);
 		}
 	});
 }
+
+var mkput = function(url, data, next) {
+	if (!sess_cookie) {
+		loginAndGetCookie('PUT', url, data, next);
+	}
+	else {
+		_mkput(url, data, next);
+	}
+};
 
 var mkpost = function(url, data, next) {
 	if (!sess_cookie) {
@@ -123,5 +182,7 @@ module.exports.mkget = mkget;
 module.exports._mkget = _mkget;
 module.exports.mkpost = mkpost;
 module.exports._mkpost = _mkpost;
+module.exports.mkput = mkput;
+module.exports._mkput = _mkput;
 
 // EOF

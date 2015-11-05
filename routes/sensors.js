@@ -13,15 +13,20 @@
 var express = require('express');
 var router = express.Router();
 var proxy = require('../modules/proxy');
+var config = require('../config/local.js');
+var sensorCfg = require('../config/sensors_conf');
 
 /**
  * Filter ZWave API from device description
+ * Must overload some attributes with our configuration
  **/
 function _filterData(body) 
 {
 	var obj = JSON.parse(body);
-	var devdata = obj.data.devices;
 	var filtered = new Array();
+	if (!obj.data) return filtered;
+	var devdata = obj.data.devices;
+	var conf = sensorCfg.getSensorsConf();
 	
 	// DEBUG Dump
 	console.log(body);
@@ -31,9 +36,16 @@ function _filterData(body)
 	}
 
 	for (i in devdata) {
-		// TODO: faire des classes de devices
 		if (devdata[i].deviceType != 'text') { 
-			filtered.push({id: devdata[i].id, deviceType: devdata[i].deviceType, metrics: devdata[i].metrics })
+			var id = devdata[i].id;
+			var metrics = devdata[i].metrics;
+			if (id in conf) {
+				//Attribute overloading
+				if ('title' in conf[id]) {
+					metrics['title'] = conf[id].title;
+				}
+			}
+			filtered.push({id: id, deviceType: devdata[i].deviceType, metrics: metrics })
 		}
 	}
 	return filtered;
@@ -61,9 +73,12 @@ router.get('/list', function(req, res, next) {
  * GET sensor delta listing 
  */
 router.get('/deltalist', function(req, res, next) {
-	// TODO: le temps doit être calculé par l'appelant... là on prend -10s parce qu'on sait que le poller polle toutes les 10s
-	// il faut donc ajouter un paramètre à cette fonction
-        proxy.mkget('/ZAutomation/api/v1/devices?since=' + Math.round((Date.now() / 1000) - 10), function(body) {
+	if (!req.query || !req.query.since)
+		since = Math.floor((Date.now() / 1000) - config.poll_interval).toString();
+	else
+		since = req.query.since;
+
+        proxy.mkget('/ZAutomation/api/v1/devices?since=' + since, function(body) {
 		if (!body) {
 			res.json({ status: 'error' });
 			return;
@@ -93,6 +108,39 @@ router.get('/command/:id/:command', function(req, res, next) {
                 res.json({ status: 'ok', data: obj});
         });
 });
+
+/**
+ * PUT a Sensor Description
+ */
+router.put('/setdescr/:id', function(req, res, next) {
+	var id = req.params.id;
+	if (!req.body.title) {
+		console.error('setdescr: missing title');
+		res.json({ status: 'ok' });
+		return;
+	}
+
+ 	// NO!!! Too dangerous: we cannot write a Sensor partially, al its chars must be written
+ 	/*
+	var data = { id: id, title: req.body.title };
+	proxy.mkput('/ZAutomation/api/v1/devices/' + id, JSON.stringify(data), function(body) {
+		if (!body) {
+			res.json({ status: 'error' });
+			return;
+		}
+		console.log(body);
+		var obj = JSON.parse(body);
+
+                res.json({ status: 'ok', data: obj});
+	});
+	*/
+	var cfg = sensorCfg.getSensorsConf();
+	if (!(id in cfg)) cfg[id] = {};
+	cfg[id].title = req.body.title;
+	sensorCfg.setSensorsConf(cfg);
+	res.json({ status: 'ok' });
+});
+
 
 module.exports = router;
 

@@ -3,22 +3,15 @@
 // ----------------------------------------------------
 //
 var config = require('./config/local.js');
+var sensors_conf = require('./config/sensors_conf');
 var proxy = require('./modules/proxy');
 var http = require('http');
 var fs = require('fs');
  
-// TODO: clean exit in case of file missing
-// TODO: send alert to ???? in case of errors ????
-// Read the zid:
-var contents = fs.readFileSync('/etc/zbw/userid', 'utf8');
-console.log(contents);
-//var zid = '34601';	
-var zid = contents.split('\n')[0];
-var contents = fs.readFileSync('/etc/domopi/config.js', 'utf8');
-console.log(contents);
-//var key = '1234';
-var key = contents.split('\n')[0];
+var zid = sensors_conf.getZid();
+var key = sensors_conf.getDomopiKey();
 var fullDeviceListSent = false;
+var lastPollTime = 0;
 
 /**
  * Do a GET Request to the internal interface
@@ -46,10 +39,40 @@ function doGet(url, next)
 }
 
 /**
- * Update the current Configuration
+ * Do a PUT Request to the internal interface
  **/
-function updateConf()
+function doPut(url, data, next)
 {
+	var headers = { 
+		'Content-Type': 'application/json;charset=utf-8', 
+		'Content-Length': Buffer.byteLength(data),
+		'Accept': 'application/json, text/plain, */*'
+	};
+        var options = { 
+		method: 'PUT', 
+		path: url, 
+		port: config.poll_srvPort, 
+		hostname: config.poll_srvHost, 
+		headers: headers 
+	};
+        console.log(options);
+        var body = '';
+        sock = http.request(options, function(res) {
+                console.log('STATUS: ' + res.statusCode);
+                res.on('data', function(chunk) {
+                        body += chunk;
+                });
+                res.on('end', function() {
+                        console.log('no more data');
+                        if (next) next(body);
+                });
+        });
+        sock.on('error', function(e) {
+                console.log('problem with request: ' + e.message);
+                if (next) next(false)
+        });
+	sock.write(data); 
+	sock.end(); 
 }
 
 /**
@@ -68,13 +91,30 @@ function handleCommand(resp)
 	for (i in cmds) {
 		var cmd = cmds[i];
 		console.log('Command:', cmd);
-		if (cmd.cmd == 'on' || cmd.cmd == 'off') {
+		// cmd = { 'key': 'xxxx', 'zid': 'xxxx', 'sid': 'xxxxx', 'cmd': { 'cmd': 'on' } }
+		// cmd = { 'key': 'xxxx', 'zid': 'xxxx', 'sid': 'xxxxx', 'cmd': { 'cmd': 'setdescr', 'value': 'blabla' } }
+		if (!cmd.cmd) continue;
+		var json = JSON.parse(cmd.cmd);
+		if (json.cmd == 'on' || json.cmd == 'off') {
 			if (!cmd.sid) {
 				console.log('Missing sid with handleCommand:', cmd);
 				return;
 			}
-			doGet('/sensors/command/' + cmd.sid + '/' + cmd.cmd, false);
-			return;
+			doGet('/sensors/command/' + cmd.sid + '/' + json.cmd, false);
+			continue;
+		}
+		if (json.cmd == 'setdescr') {
+			if (!json.value) {
+				console.log('Missing value with handleCommand:', cmd);
+				return;
+			}
+			var data = { title: json.value };
+			doPut('/sensors/setdescr/' + cmd.sid, JSON.stringify(data), function(resp) {
+				if (resp === false) {
+					console.log('setdescr Command failed');
+				}
+			});
+			continue;
 		}
 	}
 }
@@ -104,6 +144,7 @@ function sendFullDeviceList(data)
 function getFullDeviceList(next) 
 {
 	doGet('/sensors/list', next);
+	lastPollTime = Math.floor(Date.now() / 1000);
 }
 
 function sendDeltaDeviceList(data)
@@ -112,7 +153,7 @@ function sendDeltaDeviceList(data)
 	data = JSON.parse(data)
 	data['zid'] = zid;
 	data['key'] = key;
-	data['updated'] = Date.now(); // TODO: les dates sont en UTC ?????
+	data['updated'] = Date.now(); // All Dates are in UTC
 	proxy._mkpost('/poller/devices', JSON.stringify(data), function(resp) {
 		if (resp === false) {
 			console.log('DeltaDeviceList not sent: retry...');
@@ -125,7 +166,8 @@ function sendDeltaDeviceList(data)
 
 function getDeltaDeviceList(next)
 {
-	doGet('/sensors/deltalist', next);
+	doGet('/sensors/deltalist?since=' + lastPollTime.toString(), next);
+	lastPollTime = Math.floor(Date.now() / 1000);
 }
 
 function poller() 
