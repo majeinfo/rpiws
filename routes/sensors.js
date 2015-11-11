@@ -17,6 +17,13 @@ var config = require('../config/local.js');
 var sensorCfg = require('../config/sensors_conf');
 
 /**
+ * Build a device name from devid/instid/sid
+ **/
+function _buildZWaveDeviceName(devid, instid, sid) {
+	return "ZWayVDev_zway_" + devid + '-' + instid + '-' + sid;
+}
+
+/**
  * Filter ZWave API from device description
  * Must overload some attributes with our configuration
  **/
@@ -29,11 +36,13 @@ function _filterData(body)
 	var conf = sensorCfg.getSensorsConf();
 	
 	// DEBUG Dump
-	console.log(body);
+	/*
+ 	console.log(body);
 	console.log(obj.data);
 	for (i in devdata) {
 		console.log(devdata[i].deviceType);
 	}
+	*/
 
 	for (i in devdata) {
 		if (devdata[i].deviceType != 'text') { 
@@ -45,9 +54,23 @@ function _filterData(body)
 					metrics['title'] = conf[id].title;
 				}
 			}
-			filtered.push({id: id, deviceType: devdata[i].deviceType, metrics: metrics })
+			// The "id" value returned looks like ZWayVDev_zway_2-0-37-abc
+			// "2" is the Device ID in the ZWave network
+			// "0" is the instance ID in the Device
+			// "37-abc..." is the Sensor ID
+			//filtered.push({id: id, deviceType: devdata[i].deviceType, metrics: metrics })
+			console.log('id:', id);
+			var idx = id.lastIndexOf('_'); if (idx == -1) continue;
+			var fulldev = id.substr(idx+1);
+			var parts = fulldev.split('-');
+			var devid = parts[0];
+			var instid = parts[1]; if (instid === undefined) continue;
+			var sid = parts.slice(2).join('-'); if (sid === undefined) continue;
+			console.log(devid, instid, sid);
+			filtered.push({ devid: devid, instid: instid, sid: sid, deviceType: devdata[i].deviceType, metrics: metrics });
 		}
 	}
+	console.log(filtered);
 	return filtered;
 }
 
@@ -91,9 +114,12 @@ router.get('/deltalist', function(req, res, next) {
 /**
  * Send a SENSOR Command ON or OFF 
  */ 
-router.get('/command/:id/:command', function(req, res, next) {
-	var id = req.params.id;
+router.get('/command/:devid/:instid/:sid/:command', function(req, res, next) {
+	var devid = req.params.devid;
+	var instid = req.params.instid;
+	var sid = req.params.sid;
 	var cmd = req.params.command;
+	var id = _buildZWaveDeviceName(devid, instid, sid);
 	// avec ZWaveAPI, le device ID est le numéro 1,2,3...
 	// avec ZAutomation, le device ID est son nom comme ZWayVDev_zway_2-0-37
         //proxy.mkget('/ZWaveAPI/Run/devices%5B' + id + '%5D.instances%5B0%5D.commandClasses%5B37%5D.Set(0)', function(body) {
@@ -112,8 +138,11 @@ router.get('/command/:id/:command', function(req, res, next) {
 /**
  * PUT a Sensor Description
  */
-router.put('/setdescr/:id', function(req, res, next) {
-	var id = req.params.id;
+router.put('/setdescr/:devid/:instid/:sid', function(req, res, next) {
+	var devid = req.params.devid;
+	var instid = req.params.instid;
+	var sid = req.params.sid;
+	var id = _buildZWaveDeviceName(devid, instid, sid);
 	if (!req.body.title) {
 		console.error('setdescr: missing title');
 		res.json({ status: 'ok' });

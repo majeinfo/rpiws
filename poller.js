@@ -91,8 +91,8 @@ function handleCommand(resp)
 	for (i in cmds) {
 		var cmd = cmds[i];
 		console.log('Command:', cmd);
-		// cmd = { 'key': 'xxxx', 'zid': 'xxxx', 'sid': 'xxxxx', 'cmd': { 'cmd': 'on' } }
-		// cmd = { 'key': 'xxxx', 'zid': 'xxxx', 'sid': 'xxxxx', 'cmd': { 'cmd': 'setdescr', 'value': 'blabla' } }
+		// cmd = { 'key': 'xxxx', 'zid': 'xxxx', 'devid': 'xxx', 'instid': 'xxx', 'sid': 'xxxxx', 'cmd': { 'cmd': 'on' } }
+		// cmd = { 'key': 'xxxx', 'zid': 'xxxx', 'devid': 'xxx', 'instid': 'xxx', 'sid': 'xxxxx', 'cmd': { 'cmd': 'setdescr', 'value': 'blabla' } }
 		if (!cmd.cmd) continue;
 		var json = JSON.parse(cmd.cmd);
 		if (json.cmd == 'on' || json.cmd == 'off') {
@@ -100,7 +100,7 @@ function handleCommand(resp)
 				console.log('Missing sid with handleCommand:', cmd);
 				return;
 			}
-			doGet('/sensors/command/' + cmd.sid + '/' + json.cmd, false);
+			doGet('/sensors/command/' + cmd.devid + '/' + cmd.instid + '/' + cmd.sid + '/' + json.cmd, false);
 			continue;
 		}
 		if (json.cmd == 'setdescr') {
@@ -109,7 +109,7 @@ function handleCommand(resp)
 				return;
 			}
 			var data = { title: json.value };
-			doPut('/sensors/setdescr/' + cmd.sid, JSON.stringify(data), function(resp) {
+			doPut('/sensors/setdescr/' + cmd.devid + '/' + cmd.instid + '/' + cmd.sid, JSON.stringify(data), function(resp) {
 				if (resp === false) {
 					console.log('setdescr Command failed');
 				}
@@ -149,7 +149,7 @@ function getFullDeviceList(next)
 
 function sendDeltaDeviceList(data)
 {
-	if (!data) { return; }
+	if (!data) return; 	// But must make a call to receive the commands back !
 	data = JSON.parse(data)
 	data['zid'] = zid;
 	data['key'] = key;
