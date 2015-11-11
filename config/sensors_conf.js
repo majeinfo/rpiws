@@ -21,7 +21,7 @@ exports.getZid = function() {
 		//var zid = '34601';    
 		var zid = contents.split('\n')[0];
 	}
-	catch(e) {
+	catch (e) {
 		console.error('getZid:', e);
 	}
 	return zid;
@@ -36,7 +36,7 @@ exports.getDomopiKey = function() {
 		//var key = '1234';
 		key = contents.split('\n')[0];
 	}
-	catch(e) {
+	catch (e) {
 		console.error('getDomopiKey:', e);
 	}
 	return key;
@@ -64,9 +64,22 @@ exports.setSensorsConf = function(conf) {
 		confCache = conf;
 		fs.writeFileSync(confFile, json, 'utf8'); 
 	} 
-	catch(e) {
+	catch (e) {
 		console.error('setSensorsConf:', e);
 	}
+}
+
+// Get Modification Time of Sensors Configuration file
+exports.getSensorsConfMTime = function() {
+	try {
+		var stats = fs.statSync(confFile);
+		//console.log(stats);
+		return stats.mtime.getTime();
+	}
+	catch (e) {
+		console.error('getSensorsConfMTime:', e);
+	}
+	return -1;
 }
 
 // EOF 

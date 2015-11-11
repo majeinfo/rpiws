@@ -12,6 +12,7 @@ var zid = sensors_conf.getZid();
 var key = sensors_conf.getDomopiKey();
 var fullDeviceListSent = false;
 var lastPollTime = 0;
+var lastConfMTime = 0;
 
 /**
  * Do a GET Request to the internal interface
@@ -170,6 +171,22 @@ function getDeltaDeviceList(next)
 	lastPollTime = Math.floor(Date.now() / 1000);
 }
 
+function saveSensorsConf() 
+{
+	var conf = sensors_conf.getSensorsConf();
+	var data = {};
+	data['config'] = conf;
+	data['zid'] = zid;
+	data['key'] = key;
+	data['updated'] = Date.now();
+	proxy._mkpost('/poller/saveconf', JSON.stringify(data), function(resp) {
+		if (resp === false) {
+			console.log('saveconf not sent: retry...');
+			lastConfMTime = 0;
+		}
+	});
+}
+
 function poller() 
 {
 	console.log('poller');
@@ -177,6 +194,13 @@ function poller()
 		getDeltaDeviceList(sendDeltaDeviceList);
 	else
 		getFullDeviceList(sendFullDeviceList);
+
+	// Check if Conf File must be sent
+	var mtime = sensors_conf.getSensorsConfMTime();
+	if (mtime > lastConfMTime) {
+		lastConfMTime = mtime;
+		saveSensorsConf();
+	}
 }
 
 // Set parameters:
