@@ -1,10 +1,13 @@
 // ----------------------------------------------------
 // POLLER THAT SENDS EVENTS AND INFO TO REMOTE SERVER
+//
+// Set LEVEL to select the default logging level
 // ----------------------------------------------------
 //
 var config = require('./config/local.js');
 var sensors_conf = require('./config/sensors_conf');
 var proxy = require('./modules/proxy');
+var logger = require('./modules/logger');
 var http = require('http');
 var fs = require('fs');
  
@@ -21,20 +24,20 @@ function doGet(url, next)
 {
 	var headers = {};
         var options = { method: 'GET', path: url, port: config.poll_srvPort, hostname: config.poll_srvHost, headers: headers };
-        console.log(options);
+        logger.debug(options);
         var body = '';
         sock = http.get(options, function(res) {
-                console.log('STATUS: ' + res.statusCode);
+                logger.debug('STATUS: ' + res.statusCode);
                 res.on('data', function(chunk) {
                         body += chunk;
                 });
                 res.on('end', function() {
-                        console.log('no more data');
+                        logger.debug('no more data');
                         if (next) next(body);
                 });
         });
         sock.on('error', function(e) {
-                console.log('problem with request: ' + e.message);
+                logger.error('problem with request: ' + e.message);
                 if (next) next(false)
         });
 }
@@ -56,20 +59,20 @@ function doPut(url, data, next)
 		hostname: config.poll_srvHost, 
 		headers: headers 
 	};
-        console.log(options);
+        logger.debug(options);
         var body = '';
         sock = http.request(options, function(res) {
-                console.log('STATUS: ' + res.statusCode);
+                logger.debug('STATUS: ' + res.statusCode);
                 res.on('data', function(chunk) {
                         body += chunk;
                 });
                 res.on('end', function() {
-                        console.log('no more data');
+                        logger.debug('no more data');
                         if (next) next(body);
                 });
         });
         sock.on('error', function(e) {
-                console.log('problem with request: ' + e.message);
+                logger.error('problem with request: ' + e.message);
                 if (next) next(false)
         });
 	sock.write(data); 
@@ -82,23 +85,23 @@ function doPut(url, data, next)
 function handleCommand(resp) 
 {
 	var response = JSON.parse(resp);
-	console.log(response);
+	logger.debug(response);
 	if (!response.cmd || !response.cmd.length) return;
 
 	// TODO: check the command is newer than the latest action ?
 	// Commands are contained in an Array
-	console.log('Commands detected !');
+	logger.debug('Commands detected !');
 	var cmds = response.cmd;
 	for (i in cmds) {
 		var cmd = cmds[i];
-		console.log('Command:', cmd);
+		logger.debug('Command:', cmd);
 		// cmd = { 'key': 'xxxx', 'zid': 'xxxx', 'devid': 'xxx', 'instid': 'xxx', 'sid': 'xxxxx', 'cmd': { 'cmd': 'on' } }
 		// cmd = { 'key': 'xxxx', 'zid': 'xxxx', 'devid': 'xxx', 'instid': 'xxx', 'sid': 'xxxxx', 'cmd': { 'cmd': 'setdescr', 'value': 'blabla' } }
 		if (!cmd.cmd) continue;
 		var json = JSON.parse(cmd.cmd);
 		if (json.cmd == 'on' || json.cmd == 'off') {
 			if (!cmd.sid) {
-				console.log('Missing sid with handleCommand:', cmd);
+				logger.error('Missing sid with handleCommand:', cmd);
 				return;
 			}
 			doGet('/sensors/command/' + cmd.devid + '/' + cmd.instid + '/' + cmd.sid + '/' + json.cmd, false);
@@ -106,13 +109,13 @@ function handleCommand(resp)
 		}
 		if (json.cmd == 'setdescr') {
 			if (!json.value) {
-				console.log('Missing value with handleCommand:', cmd);
+				logger.error('Missing value with handleCommand:', cmd);
 				return;
 			}
 			var data = { title: json.value };
 			doPut('/sensors/setdescr/' + cmd.devid + '/' + cmd.instid + '/' + cmd.sid, JSON.stringify(data), function(resp) {
 				if (resp === false) {
-					console.log('setdescr Command failed');
+					logger.error('setdescr Command failed');
 				}
 			});
 			continue;
@@ -133,7 +136,7 @@ function sendFullDeviceList(data)
 	data['updated'] = Date.now(); // TODO: les dates sont en UTC ?????
 	proxy._mkpost('/poller/devices', JSON.stringify(data), function(resp) {
 		if (resp === false) {
-			console.log('FullDeviceList not sent: retry...');
+			logger.info('FullDeviceList not sent: retry...');
 		}
 		else {
 			fullDeviceListSent = true;
@@ -157,7 +160,7 @@ function sendDeltaDeviceList(data)
 	data['updated'] = Date.now(); // All Dates are in UTC
 	proxy._mkpost('/poller/devices', JSON.stringify(data), function(resp) {
 		if (resp === false) {
-			console.log('DeltaDeviceList not sent: retry...');
+			logger.info('DeltaDeviceList not sent: retry...');
 		}
 		else {
 			handleCommand(resp); 
@@ -181,7 +184,7 @@ function saveSensorsConf()
 	data['updated'] = Date.now();
 	proxy._mkpost('/poller/saveconf', JSON.stringify(data), function(resp) {
 		if (resp === false) {
-			console.log('saveconf not sent: retry...');
+			logger.info('saveconf not sent: retry...');
 			lastConfMTime = 0;
 		}
 	});
@@ -189,7 +192,7 @@ function saveSensorsConf()
 
 function poller() 
 {
-	console.log('poller');
+	logger.debug('poller');
 	if (fullDeviceListSent)
 		getDeltaDeviceList(sendDeltaDeviceList);
 	else

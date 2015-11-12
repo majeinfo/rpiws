@@ -13,6 +13,7 @@
 var express = require('express');
 var router = express.Router();
 var proxy = require('../modules/proxy');
+var logger = require('../modules/logger');
 var config = require('../config/local.js');
 var sensorCfg = require('../config/sensors_conf');
 
@@ -36,13 +37,11 @@ function _filterData(body)
 	var conf = sensorCfg.getSensorsConf();
 	
 	// DEBUG Dump
-	/*
- 	console.log(body);
-	console.log(obj.data);
+ 	logger.debug(body);
+	logger.debug(obj.data);
 	for (i in devdata) {
-		console.log(devdata[i].deviceType);
+		logger.debug(devdata[i].deviceType);
 	}
-	*/
 
 	for (i in devdata) {
 		if (devdata[i].deviceType != 'text') { 
@@ -59,18 +58,18 @@ function _filterData(body)
 			// "0" is the instance ID in the Device
 			// "37-abc..." is the Sensor ID
 			//filtered.push({id: id, deviceType: devdata[i].deviceType, metrics: metrics })
-			console.log('id:', id);
+			logger.debug('id:', id);
 			var idx = id.lastIndexOf('_'); if (idx == -1) continue;
 			var fulldev = id.substr(idx+1);
 			var parts = fulldev.split('-');
 			var devid = parts[0];
 			var instid = parts[1]; if (instid === undefined) continue;
 			var sid = parts.slice(2).join('-'); if (sid === undefined) continue;
-			console.log(devid, instid, sid);
+			logger.debug(devid, instid, sid);
 			filtered.push({ devid: devid, instid: instid, sid: sid, deviceType: devdata[i].deviceType, metrics: metrics });
 		}
 	}
-	console.log(filtered);
+	logger.debug(filtered);
 	return filtered;
 }
 
@@ -128,7 +127,7 @@ router.get('/command/:devid/:instid/:sid/:command', function(req, res, next) {
 			res.json({ status: 'error' });
 			return;
 		}
-		console.log(body);
+		logger.debug(body);
 		var obj = JSON.parse(body);
 
                 res.json({ status: 'ok', data: obj});
@@ -144,7 +143,7 @@ router.put('/setdescr/:devid/:instid/:sid', function(req, res, next) {
 	var sid = req.params.sid;
 	var id = _buildZWaveDeviceName(devid, instid, sid);
 	if (!req.body.title) {
-		console.error('setdescr: missing title');
+		logger.error('setdescr: missing title');
 		res.json({ status: 'ok' });
 		return;
 	}
@@ -157,7 +156,7 @@ router.put('/setdescr/:devid/:instid/:sid', function(req, res, next) {
 			res.json({ status: 'error' });
 			return;
 		}
-		console.log(body);
+		logger.debug(body);
 		var obj = JSON.parse(body);
 
                 res.json({ status: 'ok', data: obj});

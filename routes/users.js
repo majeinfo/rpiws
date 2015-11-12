@@ -1,6 +1,10 @@
+// ---------------------------------------------------------
+// Provides URL to login & logout
+// ---------------------------------------------------------
 var express = require('express');
 var router = express.Router();
 var proxy = require('../modules/proxy');
+var logger = require('../modules/logger');
 
 /* GET users listing. */
 router.get('/', function(req, res, next) {
@@ -12,7 +16,7 @@ router.get('/', function(req, res, next) {
 /* GET login */
 router.get('/login', function(req, res, next) {
 	proxy.mkget('/ZAutomation/api/v1/devices', function(body) {
-		console.log(body);
+		logger.debug(body);
 		sess = req.session;
 		sess.login = 1;
 		res.json({status: 'ok'});
@@ -27,3 +31,5 @@ router.get('/logout', function(req, res, next) {
 });
 
 module.exports = router;
+
+// EOF

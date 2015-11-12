@@ -1,47 +1,27 @@
+// --------------------------------------------------------------------------
+// PROXY INTERFACE WITH Z-WAVE
+// This is only a Web Service API - not HTML produced
+//
+// Set PORT environment variable to select the listening port (default: 3000)
+// Set LEVEL to select the default logging level
+// --------------------------------------------------------------------------
 var express = require('express'),
     session = require('express-session'),
     path = require('path'),
-    logger = require('morgan'),
+    morgan = require('morgan'),
     cookieParser = require('cookie-parser'),
     bodyParser = require('body-parser'),
     config = require('./config/local'),
-    proxy = require('./modules/proxy');
-
-// Ajouter la notion de plugins chargés dynamiquement
-// 
-// GET
-// /system => conf du système
-// /system/test
-// /system/plugin_list
-// /system/logs
-// /system/alarms
-// /sensor/list
-// /sensor/<sensor_name> => conf du sensor
-// /sensor/<sensor_name>/logs
-// /sensor/<sensor_name>/alarms
-//
-// POST
-// /plugins/output/<plugin_name>/enable
-// /plugins/output/<plugin_name>/disable
-//
-// PUT
-//
-// DELETE
-//
-//
-// TODO: le module de log et d'affichage doit pouvoir être modifié
-
-var routes = require('./routes/index');
-var users = require('./routes/users');
-var sensors = require('./routes/sensors');
+    logger = require('./modules/logger'),
+    proxy = require('./modules/proxy'),
+    routes = require('./routes/index'),
+    users = require('./routes/users'),
+    sensors = require('./routes/sensors');
 
 var app = express();
 
-// view engine setup
-//app.set('views', path.join(__dirname, 'views'));
-//app.set('view engine', 'jade');
-
-app.use(logger('dev'));
+app.use(morgan('dev'));
+//app.use(morgan('dev')({ "stream": logger.stream }));
 app.use(session({
 		//genid: function(req) {
 		//	return genuuid() // use UUIDs for session IDs
@@ -57,9 +37,36 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+/*
+app.use(expressWinston.logger({
+      transports: [
+        new winston.transports.Console({
+          json: true,
+          colorize: true
+        })
+      ],
+      msg: "HTTP {{req.method}} {{req.url}}", // optional: customize the default logging message. E.g. "{{res.statusCode}} {{req.method}} {{res.responseTime}}ms {{req.url}}" 
+      expressFormat: true, // Use the default Express/morgan request formatting, with the same colors. 
+      colorStatus: true, // Color the status code, using the Express/morgan color palette (default green, 3XX cyan, 4XX yellow, 5XX red). Will not be recognized if expressFormat is true 
+      ignoreRoute: function (req, res) { return false; } // optional: allows to skip some log messages based on request and/or response 
+    }));
+*/
+
 app.use('/', routes);
 app.use('/users', users);
 app.use('/sensors', sensors);
+
+/*
+app.use(expressWinston.errorLogger({
+	level: 'info',
+	transports: [
+		new winston.transports.Console({
+			json: true,
+			colorize: true
+        	})
+      	]
+}));
+*/
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -75,8 +82,8 @@ proxy.connect(config.rpiWSSrv, config.rpiWSPort);
 
 // development error handler
 // will print stacktrace
-/*
 if (app.get('env') === 'development') {
+  /*
   app.use(function(err, req, res, next) {
     res.status(err.status || 500);
     res.render('error', {
@@ -84,6 +91,7 @@ if (app.get('env') === 'development') {
       error: err
     });
   });
+  */
 }
 
 // production error handler
@@ -95,6 +103,7 @@ app.use(function(err, req, res, next) {
     error: {}
   });
 });
-*/
 
 module.exports = app;
+
+// EOF

@@ -5,6 +5,7 @@ var http = require('http');
 var net = require('net');
 var url = require('url');
 var config = require('../config/local.js');
+var logger = require('../modules/logger');
 var srvHost = 'localhost';
 var srvPort = 8083;
 var sess_cookie = '';
@@ -15,31 +16,31 @@ var connect = function(host, port) {
 }
 
 function _mkget(url, next) {
-	console.log(url);
+	logger.debug(url);
 	var headers = {};
 	if (sess_cookie) { headers.Cookie = sess_cookie };
 	var options = { method: 'GET', path: url, port: srvPort, hostname: srvHost, headers: headers };
-	console.log(options);
+	logger.debug(options);
 	var body = '';
 	sock = http.get(options, function(res) {
-		console.log('STATUS: ' + res.statusCode);
+		logger.debug('STATUS: ' + res.statusCode);
 		res.on('data', function(chunk) {
 			body += chunk;
 		});
 		res.on('end', function() {
-			console.log(body);
-			console.log('no more data');
+			logger.debug(body);
+			logger.debug('no more data');
 			if (next) next(body);
 		});
 	});
 	sock.on('error', function(e) {
-		console.log('problem with request: ' + e.message);
+		logger.error('problem with request: ' + e.message);
 		if (next) next(false)
 	});
 };
 
 function _mkpost(url, data, next) {
-	console.log(url);
+	logger.debug(url);
 	var headers = { 
 		'Content-Type': 'application/json;charset=utf-8', 
 		'Content-Length': Buffer.byteLength(data),
@@ -54,11 +55,11 @@ function _mkpost(url, data, next) {
 		hostname: srvHost, 
 		headers: headers,
 	};
-	console.log(options);
+	logger.debug(options);
 	var body = '';
 	sock = http.request(options, function(res) {
-		console.log('STATUS: ' + res.statusCode);
-		console.log(res.headers['set-cookie']);
+		logger.debug('STATUS: ' + res.statusCode);
+		logger.debug(res.headers['set-cookie']);
 		if (res.headers['set-cookie']) {
 			var responseCookies = res.headers['set-cookie'];
         		for ( var i=0; i<responseCookies.length; i++) {
@@ -66,19 +67,19 @@ function _mkpost(url, data, next) {
 				oneCookie = oneCookie.split(';');
 				sess_cookie += oneCookie[0]+';';
 			}
-			console.log('got cookie ! ', sess_cookie);
+			logger.debug('got cookie ! ', sess_cookie);
 		}
 		res.on('data', function(chunk) {
 			body += chunk;
 		});
 		res.on('end', function() {
-			console.log(body);
-			console.log('no more data');
+			logger.debug(body);
+			logger.debug('no more data');
 			if (next) next(body);
 		});
 	});
 	sock.on('error', function(e) {
-		console.log('problem with request: ' + e.message);
+		logger.error('problem with request: ' + e.message);
 		if (next) next(false)
 	});
 	sock.write(data); 
@@ -86,7 +87,7 @@ function _mkpost(url, data, next) {
 };
 
 function _mkput(url, data, next) {
-	console.log(url);
+	logger.debug(url);
 	var headers = { 
 		//'Content-Type': 'application/x-www-form-urlencoded', 
 		'Content-Type': 'application/json;charset=utf-8', 
@@ -102,11 +103,11 @@ function _mkput(url, data, next) {
 		hostname: srvHost, 
 		headers: headers,
 	};
-	console.log(options);
+	logger.debug(options);
 	var body = '';
 	sock = http.request(options, function(res) {
-		console.log('STATUS: ' + res.statusCode);
-		console.log(res.headers['set-cookie']);
+		logger.debug('STATUS: ' + res.statusCode);
+		logger.debug(res.headers['set-cookie']);
 		if (res.headers['set-cookie']) {
 			var responseCookies = res.headers['set-cookie'];
         		for ( var i=0; i<responseCookies.length; i++) {
@@ -114,19 +115,19 @@ function _mkput(url, data, next) {
 				oneCookie = oneCookie.split(';');
 				sess_cookie += oneCookie[0]+';';
 			}
-			console.log('got cookie ! ', sess_cookie);
+			logger.debug('got cookie ! ', sess_cookie);
 		}
 		res.on('data', function(chunk) {
 			body += chunk;
 		});
 		res.on('end', function() {
-			console.log(body);
-			console.log('no more data');
+			logger.debug(body);
+			logger.debug('no more data');
 			if (next) next(body);
 		});
 	});
 	sock.on('error', function(e) {
-		console.log('problem with request: ' + e.message);
+		logger.error('problem with request: ' + e.message);
 		if (next) next(false)
 	});
 	sock.write(data); 
@@ -137,7 +138,7 @@ function loginAndGetCookie(method, url, data, next) {
 	var auth_data = { login: config.proxy_username, password: config.proxy_password };
 	//{"form":true,"login":"admin","password":"admin","keepme":false,"default_ui":1}
 	_mkpost('/ZAutomation/api/v1/login', JSON.stringify(auth_data), function(body) {
-		console.log('login result: ', body);
+		logger.debug('login result: ', body);
 		if (method == 'POST') {
 			_mkpost(url, data, next);
 		}

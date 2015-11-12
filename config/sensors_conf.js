@@ -2,7 +2,8 @@
 // Manage the Sensor Configuration
 // ------------------------------------
 //
-var fs = require('fs');
+var fs = require('fs'),
+    logger = require('../modules/logger');
 
 var zidFile = '/etc/zbw/userid';
 var keyFile = '/etc/domopi/config.js';
@@ -17,12 +18,12 @@ exports.getZid = function() {
 	var zid = '0';
 	try {
 		var contents = fs.readFileSync(zidFile, 'utf8');
-		console.log(contents);
+		logger.debug(contents);
 		//var zid = '34601';    
 		var zid = contents.split('\n')[0];
 	}
 	catch (e) {
-		console.error('getZid:', e);
+		logger.error('getZid:', e);
 	}
 	return zid;
 }
@@ -32,12 +33,12 @@ exports.getDomopiKey = function() {
 	var key = '0';
 	try {
 		var contents = fs.readFileSync(keyFile, 'utf8');
-		console.log(contents);
+		logger.debug(contents);
 		//var key = '1234';
 		key = contents.split('\n')[0];
 	}
 	catch (e) {
-		console.error('getDomopiKey:', e);
+		logger.error('getDomopiKey:', e);
 	}
 	return key;
 }
@@ -47,12 +48,12 @@ exports.getSensorsConf = function() {
 	if (confCache) return confCache;
 	try {
 		var contents = fs.readFileSync(confFile, 'utf8');
-		console.log(contents);
+		logger.debug(contents);
 		confCache = JSON.parse(contents);
 		return confCache;
 	}
 	catch (e) {
-		console.error('getSensorsConf:', e);
+		logger.error('getSensorsConf:', e);
 	}
 	return {};
 }
@@ -65,7 +66,7 @@ exports.setSensorsConf = function(conf) {
 		fs.writeFileSync(confFile, json, 'utf8'); 
 	} 
 	catch (e) {
-		console.error('setSensorsConf:', e);
+		logger.error('setSensorsConf:', e);
 	}
 }
 
@@ -73,11 +74,11 @@ exports.setSensorsConf = function(conf) {
 exports.getSensorsConfMTime = function() {
 	try {
 		var stats = fs.statSync(confFile);
-		//console.log(stats);
+		//logger.debug(stats);
 		return stats.mtime.getTime();
 	}
 	catch (e) {
-		console.error('getSensorsConfMTime:', e);
+		logger.error('getSensorsConfMTime:', e);
 	}
 	return -1;
 }
