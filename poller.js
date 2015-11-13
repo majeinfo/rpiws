@@ -4,15 +4,15 @@
 // Set LEVEL to select the default logging level
 // ----------------------------------------------------
 //
-var config = require('./config/local.js');
-var sensors_conf = require('./config/sensors_conf');
+var config = require('./config/local');
+var domopi = require('./config/domopi');
 var proxy = require('./modules/proxy');
 var logger = require('./modules/logger');
 var http = require('http');
 var fs = require('fs');
  
-var zid = sensors_conf.getZid();
-var key = sensors_conf.getDomopiKey();
+var zid = domopi.getZid();
+var key = domopi.getDomopiKey();
 var fullDeviceListSent = false;
 var lastPollTime = 0;
 var lastConfMTime = 0;
@@ -174,9 +174,9 @@ function getDeltaDeviceList(next)
 	lastPollTime = Math.floor(Date.now() / 1000);
 }
 
-function saveSensorsConf() 
+function saveDomopiConf() 
 {
-	var conf = sensors_conf.getSensorsConf();
+	var conf = domopi.getDomopiConf();
 	var data = {};
 	data['config'] = conf;
 	data['zid'] = zid;
@@ -199,10 +199,10 @@ function poller()
 		getFullDeviceList(sendFullDeviceList);
 
 	// Check if Conf File must be sent
-	var mtime = sensors_conf.getSensorsConfMTime();
+	var mtime = domopi.getDomopiConfMTime();
 	if (mtime > lastConfMTime) {
 		lastConfMTime = mtime;
-		saveSensorsConf();
+		saveDomopiConf();
 	}
 }
 

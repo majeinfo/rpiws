@@ -1,21 +1,14 @@
-// ------------------------------------------------------------
+// ------------------------------------------------------------------------
 // SENSOR Management
 //
-// la requête suivante retourne les devices classés par type:
-// GET /ZAutomation/api/v1/namespaces
-//
-// pour obtenir la liste des modules:
-// GET /ZAutomation/api/v1/instances
-//
-// pour configurer un module:
-// POST /ZAutomation/api/v1/instances
-// ------------------------------------------------------------
+// TODO: add some security: for example both the zid+key must be provided
+// ------------------------------------------------------------------------
 var express = require('express');
 var router = express.Router();
 var proxy = require('../modules/proxy');
 var logger = require('../modules/logger');
-var config = require('../config/local.js');
-var sensorCfg = require('../config/sensors_conf');
+var config = require('../config/local');
+var domopi = require('../config/domopi');
 
 /**
  * Build a device name from devid/instid/sid
@@ -34,7 +27,7 @@ function _filterData(body)
 	var filtered = new Array();
 	if (!obj.data) return filtered;
 	var devdata = obj.data.devices;
-	var conf = sensorCfg.getSensorsConf();
+	var conf = domopi.getDomopiConf();
 	
 	// DEBUG Dump
  	logger.debug(body);
@@ -47,11 +40,10 @@ function _filterData(body)
 		if (devdata[i].deviceType != 'text') { 
 			var id = devdata[i].id;
 			var metrics = devdata[i].metrics;
-			if (id in conf) {
-				//Attribute overloading
-				if ('title' in conf[id]) {
-					metrics['title'] = conf[id].title;
-				}
+			var sensor_conf = domopi.getSensorConf(id);
+			//Attribute overloading
+			if ('title' in sensor_conf) {
+				metrics['title'] = conf[id].title;
 			}
 			// The "id" value returned looks like ZWayVDev_zway_2-0-37-abc
 			// "2" is the Device ID in the ZWave network
@@ -162,10 +154,9 @@ router.put('/setdescr/:devid/:instid/:sid', function(req, res, next) {
                 res.json({ status: 'ok', data: obj});
 	});
 	*/
-	var cfg = sensorCfg.getSensorsConf();
-	if (!(id in cfg)) cfg[id] = {};
-	cfg[id].title = req.body.title;
-	sensorCfg.setSensorsConf(cfg);
+	var cfg = domopi.getSensorConf();
+	cfg.title = req.body.title;
+	domopi.setSensorConf(sid, cfg);
 	res.json({ status: 'ok' });
 });
 

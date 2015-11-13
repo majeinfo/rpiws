@@ -1,5 +1,5 @@
 // ------------------------------------
-// Manage the Sensor Configuration
+// Manage the Domopi Configuration
 // ------------------------------------
 //
 var fs = require('fs'),
@@ -7,7 +7,7 @@ var fs = require('fs'),
 
 var zidFile = '/etc/zbw/userid';
 var keyFile = '/etc/domopi/config.js';
-var confFile = '/etc/domopi/sensors.js';
+var confFile = '/etc/domopi/domopi.js';
 var confCache = undefined;
 
 // TODO: clean exit in case of file missing
@@ -43,8 +43,8 @@ exports.getDomopiKey = function() {
 	return key;
 }
 
-// Read the Sensors Configuration (JSON Format)
-exports.getSensorsConf = function() {
+// Read the Domopi Configuration (JSON Format)
+exports.getDomopiConf = function() {
 	if (confCache) return confCache;
 	try {
 		var contents = fs.readFileSync(confFile, 'utf8');
@@ -53,34 +53,53 @@ exports.getSensorsConf = function() {
 		return confCache;
 	}
 	catch (e) {
-		logger.error('getSensorsConf:', e);
+		logger.error('getDomopiConf:', e);
 	}
 	return {};
 }
 
-// Write new Sensors Configuration (JSON Format)
-exports.setSensorsConf = function(conf) {
+// Write new Domopi Configuration (JSON Format)
+exports.setDomopiConf = function(conf) {
 	try {
 		var json = JSON.stringify(conf);
 		confCache = conf;
 		fs.writeFileSync(confFile, json, 'utf8'); 
 	} 
 	catch (e) {
-		logger.error('setSensorsConf:', e);
+		logger.error('setDomopiConf:', e);
 	}
 }
 
 // Get Modification Time of Sensors Configuration file
-exports.getSensorsConfMTime = function() {
+exports.getDomopiConfMTime = function() {
 	try {
 		var stats = fs.statSync(confFile);
 		//logger.debug(stats);
 		return stats.mtime.getTime();
 	}
 	catch (e) {
-		logger.error('getSensorsConfMTime:', e);
+		logger.error('getDomopiConfMTime:', e);
 	}
 	return -1;
+}
+
+// Extract a Sensor description from the configuration
+exports.getSensorConf = function(sid) {
+	var conf = exports.getDomopiConf();
+	if ('sensors' in conf && sid in conf['sensors']) {
+		return conf['sensors'][sid];
+	}
+	return {}
+}
+
+// Save a Sensor description
+exports.setSensorConf = function(sid, cfg) {
+	var conf = exports.getDomopiConf();
+	if (!('sensors' in conf)) {
+		conf['sensors'] = {};
+	}
+	conf['sensors'][sid] = cfg;
+	exports.setDomopiConf(conf);
 }
 
 // EOF 
