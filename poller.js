@@ -120,6 +120,19 @@ function handleCommand(resp)
 			});
 			continue;
 		}
+		if (json.cmd == 'controller_setdescr') {
+			if (!json.value) {
+				logger.error('Missing value with handleCommand:', cmd);
+				return;
+			}
+			var data = { description: json.value };
+			doPut('/controllers/setdescr', JSON.stringify(data), function(resp) {
+				if (resp === false) {
+					logger.error('controller_setdescr Command failed');
+				}
+			});
+			continue;
+		}
 	}
 }
 
@@ -208,9 +221,6 @@ function poller()
 
 // Set parameters:
 proxy.connect(config.poll_externalSrvHost, config.poll_externalSrvPort);
-
-// When launched, send the full device list description to the external web server
-//getFullDeviceList(sendFullDeviceList);
 
 // Now, launch the poller that will send the delta device list on regular basis
 setInterval(poller, config.poll_interval * 1000);

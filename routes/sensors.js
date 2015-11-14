@@ -2,6 +2,7 @@
 // SENSOR Management
 //
 // TODO: add some security: for example both the zid+key must be provided
+// TODO: write a 'Sensor" class with a load/save method
 // ------------------------------------------------------------------------
 var express = require('express');
 var router = express.Router();
@@ -27,7 +28,6 @@ function _filterData(body)
 	var filtered = new Array();
 	if (!obj.data) return filtered;
 	var devdata = obj.data.devices;
-	var conf = domopi.getDomopiConf();
 	
 	// DEBUG Dump
  	logger.debug(body);
@@ -40,11 +40,6 @@ function _filterData(body)
 		if (devdata[i].deviceType != 'text') { 
 			var id = devdata[i].id;
 			var metrics = devdata[i].metrics;
-			var sensor_conf = domopi.getSensorConf(id);
-			//Attribute overloading
-			if ('title' in sensor_conf) {
-				metrics['title'] = conf[id].title;
-			}
 			// The "id" value returned looks like ZWayVDev_zway_2-0-37-abc
 			// "2" is the Device ID in the ZWave network
 			// "0" is the instance ID in the Device
@@ -58,6 +53,13 @@ function _filterData(body)
 			var instid = parts[1]; if (instid === undefined) continue;
 			var sid = parts.slice(2).join('-'); if (sid === undefined) continue;
 			logger.debug(devid, instid, sid);
+
+			var cfg = domopi.getSensorConf(devid, instid, sid);
+			//Attribute overloading
+			if ('title' in cfg) {
+				metrics['title'] = cfg.title;
+			}
+
 			filtered.push({ devid: devid, instid: instid, sid: sid, deviceType: devdata[i].deviceType, metrics: metrics });
 		}
 	}
@@ -133,7 +135,7 @@ router.put('/setdescr/:devid/:instid/:sid', function(req, res, next) {
 	var devid = req.params.devid;
 	var instid = req.params.instid;
 	var sid = req.params.sid;
-	var id = _buildZWaveDeviceName(devid, instid, sid);
+	//var id = _buildZWaveDeviceName(devid, instid, sid);
 	if (!req.body.title) {
 		logger.error('setdescr: missing title');
 		res.json({ status: 'ok' });
@@ -154,9 +156,9 @@ router.put('/setdescr/:devid/:instid/:sid', function(req, res, next) {
                 res.json({ status: 'ok', data: obj});
 	});
 	*/
-	var cfg = domopi.getSensorConf();
+	var cfg = domopi.getSensorConf(devid, instid, sid);
 	cfg.title = req.body.title;
-	domopi.setSensorConf(sid, cfg);
+	domopi.setSensorConf(devid, instid, sid, cfg);
 	res.json({ status: 'ok' });
 });
 

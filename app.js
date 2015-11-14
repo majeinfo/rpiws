@@ -16,6 +16,7 @@ var express = require('express'),
     proxy = require('./modules/proxy'),
     routes = require('./routes/index'),
     users = require('./routes/users'),
+    controllers = require('./routes/controllers'),
     sensors = require('./routes/sensors'),
     automation = require('./routes/automation');
 
@@ -55,6 +56,7 @@ app.use(expressWinston.logger({
 
 app.use('/', routes);
 app.use('/users', users);
+app.use('/controllers', controllers);
 app.use('/sensors', sensors);
 app.use('/automation', automation);
 

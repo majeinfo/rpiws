@@ -45,6 +45,7 @@ exports.getDomopiKey = function() {
 
 // Read the Domopi Configuration (JSON Format)
 exports.getDomopiConf = function() {
+	logger.debug('getDomopiConf');
 	if (confCache) return confCache;
 	try {
 		var contents = fs.readFileSync(confFile, 'utf8');
@@ -54,12 +55,23 @@ exports.getDomopiConf = function() {
 	}
 	catch (e) {
 		logger.error('getDomopiConf:', e);
+
+		try {
+			// Try to create an empty file
+			if (!fs.existsSync(confFile)) {
+				fs.writeFileSync(confFile, "{}", 'utf8');
+			}
+		}
+		catch (e) {
+			logger.error('Cannot create default Domopi ConfFile:', e);
+		}
 	}
 	return {};
 }
 
 // Write new Domopi Configuration (JSON Format)
 exports.setDomopiConf = function(conf) {
+	logger.debug('setDomopiConfig');
 	try {
 		var json = JSON.stringify(conf);
 		confCache = conf;
@@ -83,22 +95,40 @@ exports.getDomopiConfMTime = function() {
 	return -1;
 }
 
-// Extract a Sensor description from the configuration
-exports.getSensorConf = function(sid) {
+// Extract the Controller description
+exports.getControllerConf = function() {
 	var conf = exports.getDomopiConf();
-	if ('sensors' in conf && sid in conf['sensors']) {
-		return conf['sensors'][sid];
+	if ('controller' in conf) {
+		return conf['controller'];
 	}
 	return {}
 }
 
-// Save a Sensor description
-exports.setSensorConf = function(sid, cfg) {
+// Save a Controller description
+exports.setControllerConf = function(cfg) {
 	var conf = exports.getDomopiConf();
-	if (!('sensors' in conf)) {
-		conf['sensors'] = {};
-	}
-	conf['sensors'][sid] = cfg;
+	conf['controller'] = cfg;
+	exports.setDomopiConf(conf);
+}
+
+// Extract a Sensor description from the configuration
+exports.getSensorConf = function(devid, instid, sid) {
+	logger.debug('getSensorConf:', devid, instid, sid);
+	var conf = exports.getDomopiConf();
+	if (!('sensors' in conf)) { conf['sensors'] = {}; }
+	if (!(devid in conf['sensors'])) { conf['sensors'][devid] = {}; }
+	if (!(instid in conf['sensors'][devid])) { conf['sensors'][devid][instid] = {}; }
+	if (!(sid in conf['sensors'][devid][instid])) { conf['sensors'][devid][instid][sid] = {}; }
+	return conf['sensors'][devid][instid][sid];
+}
+
+// Save a Sensor description
+exports.setSensorConf = function(devid, instid, sid, cfg) {
+	logger.debug('setSensorConf:', devid, instid, sid);
+	var conf = exports.getDomopiConf();
+	if (!(devid in conf['sensors'])) { conf['sensors'][devid] = {}; }
+	if (!(instid in conf['sensors'][devid])) { conf['sensors'][devid][instid] = {}; }
+	conf['sensors'][devid][instid][sid] = cfg;
 	exports.setDomopiConf(conf);
 }
 
