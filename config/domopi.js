@@ -132,4 +132,14 @@ exports.setSensorConf = function(devid, instid, sid, cfg) {
 	exports.setDomopiConf(conf);
 }
 
+// Get the Automation Rules
+exports.getAutomationRules = function() {
+	logger.debug('getAutomationRules');
+	var conf = exports.getDomopiConf();
+	if ('rules' in conf) {
+		return conf['rules'];
+	}
+	return {}
+}
+
 // EOF 

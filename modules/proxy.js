@@ -1,11 +1,12 @@
 // ----------------------------------------------------
 // Proxy with Z-Wave APIs
 // ----------------------------------------------------
-var http = require('http');
-var net = require('net');
-var url = require('url');
-var config = require('../config/local.js');
-var logger = require('../modules/logger');
+var http = require('http'),
+    net = require('net'),
+    url = require('url'),
+    config = require('../config/local.js'),
+    logger = require('../modules/logger');
+
 var srvHost = 'localhost';
 var srvPort = 8083;
 var sess_cookie = '';

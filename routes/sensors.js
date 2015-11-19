@@ -6,17 +6,12 @@
 // ------------------------------------------------------------------------
 var express = require('express');
 var router = express.Router();
-var proxy = require('../modules/proxy');
-var logger = require('../modules/logger');
-var config = require('../config/local');
-var domopi = require('../config/domopi');
-
-/**
- * Build a device name from devid/instid/sid
- **/
-function _buildZWaveDeviceName(devid, instid, sid) {
-	return "ZWayVDev_zway_" + devid + '-' + instid + '-' + sid;
-}
+var proxy = require('../modules/proxy'),
+    logger = require('../modules/logger'),
+    zwave = require('../modules/zwave'),
+    sensor = require('../modules/sensor'),
+    config = require('../config/local'),
+    domopi = require('../config/domopi');
 
 /**
  * Filter ZWave API from device description
@@ -112,7 +107,8 @@ router.get('/command/:devid/:instid/:sid/:command', function(req, res, next) {
 	var instid = req.params.instid;
 	var sid = req.params.sid;
 	var cmd = req.params.command;
-	var id = _buildZWaveDeviceName(devid, instid, sid);
+	var id = zwave.buildZWaveDeviceName(devid, instid, sid);
+	//
 	// avec ZWaveAPI, le device ID est le numéro 1,2,3...
 	// avec ZAutomation, le device ID est son nom comme ZWayVDev_zway_2-0-37
         //proxy.mkget('/ZWaveAPI/Run/devices%5B' + id + '%5D.instances%5B0%5D.commandClasses%5B37%5D.Set(0)', function(body) {
@@ -135,7 +131,7 @@ router.put('/setdescr/:devid/:instid/:sid', function(req, res, next) {
 	var devid = req.params.devid;
 	var instid = req.params.instid;
 	var sid = req.params.sid;
-	//var id = _buildZWaveDeviceName(devid, instid, sid);
+	//var id = zwave.buildZWaveDeviceName(devid, instid, sid);
 	if (!req.body.title) {
 		logger.error('setdescr: missing title');
 		res.json({ status: 'ok' });
