@@ -27,6 +27,7 @@ function _getCurrentMetric(details) {
 // { condtype: 'timecond'|'statuscond'|'thresholdcond'|'ruleconf', details: { }
 // 	if condtype == 'thresholdcond', details={ devid:, instid:, sid:, value:, testtype: '>|<|>=|<=|==|!=' }
 // 	if condtype == 'statuscond', details={ devid:, instid:, sid:, value:'on|off', testtype: '==|!=' }
+// 	if condtype == 'timecond', details={ starttime: 'hh:mm', endtime: 'hh:mm', days: '01234567' }
 // ACTION format: (default AND)
 // { actiontype: 'sensorcmd'|'customcmd', details: {} }
 // 	if actiontype == sensorcmd, details={ devid:, instid:, sid:, value:'on|off' }
@@ -67,6 +68,43 @@ function _ruleSatisfied(rule) {
 			}
 			catch (e) {
 				logger.error('eval failed');
+			}
+		}
+		else if (cond.condtype == 'timecond') {
+			var curdate = new Date(),
+ 			    starttime = undefined,
+			    endtime = undefined,
+			    parts;
+
+			// Check the day of the week
+			if ('days' in cond.details && cond.details.days != '') {
+				var curday = curdate.getDay();
+				if (cond.details.days.indexOf(curday.toString()) == -1) return false;
+			}
+
+			if ('starttime' in cond.details && cond.details.starttime != '') {
+				parts = cond.details.starttime.split(':');
+				starttime = parseInt(parts[0]) * 60 + parseInt(parts[1]);
+			}
+			if ('endtime' in cond.details && cond.details.endtime != '') {
+				parts = cond.details.endtime.split(':');
+				endtime = parseInt(parts[0]) * 60 + parseInt(parts[1]);
+			}
+
+			// If starttime only, we must check if we are in the same minute
+			// (the user wants "this" to be executed AT HH:MM)
+			logger.debug('starttime:', starttime, 'endtime:', endtime);
+			if (starttime && !endtime) {
+				var curtime = curdate.getUTCHours() * 60 + curdate.getUTCMinutes();
+				logger.debug('curtime:', curtime);
+				if (starttime <= curtime && (starttime+60) >= curtime) {
+					is_satisfied = true;
+					continue;
+				}
+			}
+			// (the user wants "this" to be executed from HH:MM until HH:MM)
+			// TODO: ?????
+			if (starttime && endtime) {
 			}
 		}
 		else if (cond.condtype == 'statuscond') {

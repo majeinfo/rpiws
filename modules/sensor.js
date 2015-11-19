@@ -57,7 +57,7 @@ function updateSensors(devid, instid, sid, data) {
 
 // Send a command to a Sensor using our ZWave Web Interface
 Sensor.prototype.sendCommand = function(cmd, next) {
-        zwave.doGet('/sensor/command/' + this.devid + '/' + this.instid + '/' + this.sid + '/' + cmd, function(body) {
+        zwave.doGet('/sensors/command/' + this.devid + '/' + this.instid + '/' + this.sid + '/' + cmd, function(body) {
 		logger.debug('sendCommand api call returned:', body);
 		if (next) next(body);
         });
