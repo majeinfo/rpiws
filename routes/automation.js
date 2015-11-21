@@ -4,13 +4,13 @@
 // TODO: add some security: for example both the zid+key must be provided
 // TODO: use HMAC
 // ------------------------------------------------------------------------
-var express = require('express');
+var express = require('express'),
+    crypto = require('crypto'),
+    zwave = require('../modules/zwave'),
+    logger = require('../modules/logger'),
+    config = require('../config/local'),
+    domopi = require('../config/domopi');
 var router = express.Router();
-var crpto = require('crypto');
-var proxy = require('../modules/proxy');
-var logger = require('../modules/logger');
-var config = require('../config/local');
-var domopi = require('../config/domopi');
 
 var sharedSecret = domopi.getDomopiKey();
 

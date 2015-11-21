@@ -3,26 +3,23 @@
 //
 // TODO: add some security: for example both the zid+key must be provided
 // ------------------------------------------------------------------------
-var express = require('express');
-var router = express.Router();
-var proxy = require('../modules/proxy');
-var logger = require('../modules/logger');
-var config = require('../config/local');
-var domopi = require('../config/domopi');
+var express = require('express'),
+    config = require('../config/local'),
+    domopi = require('../config/domopi'),
+    logger = require('../modules/logger'),
+    controller = require('../modules/controller'),
+    router = express.Router();
 
 /**
  * PUT a Controller Description
  */
 router.put('/setdescr', function(req, res, next) {
 	if (!req.body.description) {
-		logger.error('setdescr: missing description');
-		res.json({ status: 'ok' });
+		logger.error('/setdescr: missing description');
+		res.json({ status: 'ok', msg: 'missing description' });
 		return;
 	}
-
-	var cfg = domopi.getControllerConf();
-	cfg.description = req.body.description;
-	domopi.setControllerConf(cfg);
+	controller.setDescription(req.body.description);
 	res.json({ status: 'ok' });
 });
 

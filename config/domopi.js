@@ -9,38 +9,42 @@ var zidFile = '/etc/zbw/userid';
 var keyFile = '/etc/domopi/config.js';
 var confFile = '/etc/domopi/domopi.js';
 var confCache = undefined;
+var _zid = undefined;
+var _key = undefined;
 
 // TODO: clean exit in case of file missing
 // TODO: send alert to ???? in case of errors ????
 
 // Read the zid:
 exports.getZid = function() {
+	if (_zid) return _zid;
+
 	var zid = '0';
 	try {
 		var contents = fs.readFileSync(zidFile, 'utf8');
-		logger.debug(contents);
-		//var zid = '34601';    
 		var zid = contents.split('\n')[0];
+		logger.debug(zidFile, 'contains:', zid);
 	}
 	catch (e) {
 		logger.error('getZid:', e);
 	}
-	return zid;
+	return _zid = zid;
 }
 
 // Read the Domopi Key
 exports.getDomopiKey = function() {
+	if (_key) return _key;
+
 	var key = '0';
 	try {
 		var contents = fs.readFileSync(keyFile, 'utf8');
-		logger.debug(contents);
-		//var key = '1234';
 		key = contents.split('\n')[0];
+		logger.debug(keyFile, 'contains:', key);
 	}
 	catch (e) {
 		logger.error('getDomopiKey:', e);
 	}
-	return key;
+	return _key = key;
 }
 
 // Read the Domopi Configuration (JSON Format)

@@ -1,10 +1,10 @@
 // ---------------------------------------------------------
 // Provides URL to login & logout
 // ---------------------------------------------------------
-var express = require('express');
-var router = express.Router();
-var proxy = require('../modules/proxy');
-var logger = require('../modules/logger');
+var express = require('express'),
+    zwave = require('../modules/zwave'),
+    logger = require('../modules/logger'),
+    router = express.Router();
 
 /* GET users listing. */
 router.get('/', function(req, res, next) {
@@ -15,7 +15,7 @@ router.get('/', function(req, res, next) {
 
 /* GET login */
 router.get('/login', function(req, res, next) {
-	proxy.mkget('/ZAutomation/api/v1/devices', function(body) {
+	zwave.mkget('/ZAutomation/api/v1/devices', function(body) {
 		logger.debug(body);
 		sess = req.session;
 		sess.login = 1;

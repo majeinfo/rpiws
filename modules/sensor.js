@@ -4,8 +4,7 @@
 //
 var domopi = require('../config/domopi'),
     logger = require('../modules/logger'),
-    zwave = require('../modules/zwave'),
-    proxy = require('../modules/proxy');
+    zwave = require('../modules/zwave');
 
 // Dictionnary of Sensors
 var mySensors = new Array();
@@ -18,6 +17,7 @@ var Sensor = function(devid, instid, sid) {
 	this.data = {};
 }
 
+// Get Sensor current Metric
 Sensor.prototype.getCurrentMetric = function() {
 	var data = this.data;
 	logger.debug('Data for Sensor:', data);
@@ -33,6 +33,19 @@ Sensor.prototype.getCurrentMetric = function() {
         // Everything must be a string
         if (typeof level == 'number') level = level.toString();
         return level;
+}
+
+// Send a command to a Sensor using our ZWave Web Interface
+Sensor.prototype.sendCommand = function(cmd, next) {
+        zwave.sendCommand(this.devid, this.instid, this.sid, cmd, next);
+}
+
+// Change the Sensor Description
+Sensor.prototype.setDescription = function(newdesc, next) {
+        var cfg = domopi.getSensorConf(this.devid, this.instid, this.sid);
+        cfg.title = newdesc;
+        domopi.setSensorConf(this.devid, this.instid, this.sid, cfg);
+	if (next) next();
 }
 
 // Find a sensor in the bag
@@ -53,14 +66,6 @@ function updateSensors(devid, instid, sid, data) {
 		mySensors.push(sens);
 	}
 	sens.data = data;
-}
-
-// Send a command to a Sensor using our ZWave Web Interface
-Sensor.prototype.sendCommand = function(cmd, next) {
-        zwave.doGet('/sensors/command/' + this.devid + '/' + this.instid + '/' + this.sid + '/' + cmd, function(body) {
-		logger.debug('sendCommand api call returned:', body);
-		if (next) next(body);
-        });
 }
 
 module.exports.updateSensors = updateSensors;

@@ -13,8 +13,7 @@ var express = require('express'),
     bodyParser = require('body-parser'),
     config = require('./config/local'),
     logger = require('./modules/logger'),
-    proxy = require('./modules/proxy'),
-    routes = require('./routes/index'),
+    zwave = require('./modules/zwave'),
     users = require('./routes/users'),
     controllers = require('./routes/controllers'),
     sensors = require('./routes/sensors'),
@@ -54,7 +53,6 @@ app.use(expressWinston.logger({
     }));
 */
 
-app.use('/', routes);
 app.use('/users', users);
 app.use('/controllers', controllers);
 app.use('/sensors', sensors);
@@ -80,7 +78,7 @@ app.use(function(req, res, next) {
 });
 
 // Let's go, Marco !
-proxy.connect(config.rpiWSSrv, config.rpiWSPort);
+zwave.connect(config.rpiWSSrv, config.rpiWSPort);
 
 // error handlers
 
@@ -107,6 +105,9 @@ app.use(function(err, req, res, next) {
     error: {}
   });
 });
+
+// Start the Poller now !
+poller = require('./modules/poller');
 
 module.exports = app;
 
