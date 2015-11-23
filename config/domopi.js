@@ -5,15 +5,30 @@
 var fs = require('fs'),
     logger = require('../modules/logger');
 
-var zidFile = '/etc/zbw/userid';
-var keyFile = '/etc/domopi/config.js';
-var confFile = '/etc/domopi/domopi.js';
-var confCache = undefined;
-var _zid = undefined;
-var _key = undefined;
+var zidFile = '/etc/zbw/userid',
+    keyFile = '/etc/domopi/config.js',
+    dversionFile = '/etc/domopi/do-version',
+    confFile = '/etc/domopi/domopi.js',
+    confCache = undefined,
+    _zid = undefined,
+    _key = undefined;
 
 // TODO: clean exit in case of file missing
 // TODO: send alert to ???? in case of errors ????
+
+// Read Domopi Version
+exports.getDomopiVersion = function() {
+	var version = '0';
+	try {
+		var contents = fs.readFileSync(dversionFile, 'utf8');
+		var version = contents.split('\n')[0];
+		logger.debug(dversionFile, 'contains:', version);
+	}
+	catch (e) {
+		logger.error('getDomopiVersion:', e);
+	}
+	return version;
+}
 
 // Read the zid:
 exports.getZid = function() {

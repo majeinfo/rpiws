@@ -11,6 +11,14 @@ var express = require('express'),
     router = express.Router();
 
 /**
+ * Receive a PING and sends back our Version
+ */
+router.get('/ping', function(req, res, next) {
+	var version = domopi.getDomopiVersion();
+	res.json({ status: 'ok', doVersion: version });
+});
+
+/**
  * PUT a Controller Description
  */
 router.put('/setdescr', function(req, res, next) {
@@ -22,7 +30,6 @@ router.put('/setdescr', function(req, res, next) {
 	controller.setDescription(req.body.description);
 	res.json({ status: 'ok' });
 });
-
 
 module.exports = router;
 
