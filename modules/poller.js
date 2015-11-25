@@ -7,6 +7,7 @@
 // TODO: node-cron can be used ?
 // TODO: each time a rule is triggered, should memorize
 //       it and sends last history event to whoever wants it
+// TODO: should send back to the web server the last logs
 // -----------------------------------------------------------
 //
 var config = require('../config/local'),
@@ -29,14 +30,14 @@ var lastConfMTime = 0;
 /**
  * Get a Sensor from cmd content
  */
-function _getSensorFromCmd(cmd) {
-	if (!cmd.devid || !cmd.instid || !cmd.sid) {
-		logger.error('Missing devid or instid or sid with handleCommand:', cmd);
+function _getSensorFromCmd(p) {
+	if (!p.devid || !p.instid || !p.sid) {
+		logger.error('Missing devid or instid or sid with handleCommand:', p);
 		return false;
 	}
-	var sens = sensor.findSensor(cmd.devid, cmd.instid, cmd.sid);
+	var sens = sensor.findSensor(p.devid, p.instid, p.sid);
 	if (!(sens)) {
-		logger.error('Sensor not found !', cmd.devid, cmd.instid, cmd.sid);
+		logger.error('Sensor not found !', p.devid, p.instid, p.sid);
 		return false;
 	}
 
@@ -51,67 +52,64 @@ function handleCommand(resp)
 {
 	var response = JSON.parse(resp);
 	logger.debug(response);
-	if (!response.cmd || !response.cmd.length) return;
+	if (!response.cmds || !response.cmds.length) return;
 
 	// TODO: check the command is newer than the latest action ?
 	// Commands are contained in an Array
 	logger.debug('Commands detected !');
-	var cmds = response.cmd;
+	var cmds = response.cmds;
 	for (i in cmds) {
 		var sens;
 		var cmd = cmds[i];
 		logger.debug('Command:', cmd);
-		// cmd = { 'key': 'xxxx', 'zid': 'xxxx', 'devid': 'xxx', 'instid': 'xxx', 'sid': 'xxxxx', 'cmd': { 'cmd': 'on' } }
-		// cmd = { 'key': 'xxxx', 'zid': 'xxxx', 'devid': 'xxx', 'instid': 'xxx', 'sid': 'xxxxx', 'cmd': { 'cmd': 'setdescr', 'value': 'blabla' } }
-		if (!cmd.cmd) continue;
-		var json = JSON.parse(cmd.cmd);
-		if (json.cmd == 'on' || json.cmd == 'off') {
-			if ((sens = _getSensorFromCmd(cmd)) === false) return;
-			sens.sendCommand(json.cmd, false);
+		// ('parms' value is a JSON string)
+		// cmd = { 'key': 'xxxx', 'zid': 'xxxx', 'cmd': 'on|off', 'parms': "{ 'devid': 'xxx', 'instid': 'xxx', 'sid': 'xxxxx' }" }
+		// cmd = { 'key': 'xxxx', 'zid': 'xxxx', 'cmd': 'sensor_setdescr', 'parms': "{ 'devid': 'xxx', 'instid': 'xxx', 'sid': 'xxxxx', 'value': 'blabla' }" }
+		// cmd = { 'key': 'xxxx', 'zid': 'xxxx', 'cmd': 'rules_def', 'parms': "{ 'rules': 'json_rules' }" }
+		// cmd = { 'key': 'xxxx', 'zid': 'xxxx', 'cmd': 'controller_setdescr', 'parms': "{ 'value': 'blabla' }" }
+		if (!cmd.cmd || !cmd.parms) {
+			logger.error('Command missing cmd or parms value');
 			continue;
 		}
-		if (json.cmd == 'setdescr') {
-			if (!json.value) {
-				logger.error('Missing value with handleCommand:', cmd);
-				return;
-			}
-			var data = { title: json.value };
-			if ((sens = _getSensorFromCmd(cmd)) === false) return;
-			sens.setDescription(JSON.stringify(data));
+		try {
+			var parms = JSON.parse(cmd.parms);
+		}
+		catch(e) {
+			logger.error('Error parsing cmd.parms:', cmd.parms);
 			continue;
 		}
-		if (json.cmd == 'controller_setdescr') {
-			if (!json.value) {
-				logger.error('Missing value with handleCommand:', cmd);
-				return;
-			}
-			var data = { description: json.value };
-			controller.setDescription(JSON.stringify(data));
-			continue;
-		}
-	}
-}
 
-/**
- * Clean the data sent to the remote web server
- * TODO: ????? should be made in zwave module with filterdata ?
- */
-/*
-function _cleanData(data) {
-	logger.debug('_cleanData:', data);
-	if (!('data' in data)) return;
-	for (i in data.data) {
-		var d = data.data[i];
-		logger.debug(d);
-		if (!('metrics' in d)) continue;
-		data['is_level_number'] = (d.metrics.level != 'on' && d.metrics.level != 'off');
-		data['level'] = (data['is_level_number']) ? d.metrics.level : 0;
-		data['on_off'] = (d.metrics.level == 'on');
-		data['change'] = d.metrics.change;
+		if (cmd.cmd == 'on' || cmd.cmd == 'off') {
+			if ((sens = _getSensorFromCmd(parms)) === false) continue;
+			sens.sendCommand(cmd.cmd, false);
+			continue;
+		}
+		if (cmd.cmd == 'sensor_setdescr') {
+			if (!parms.value) {
+				logger.error('Missing value with handleCommand:', cmd);
+				continue;
+			}
+			if ((sens = _getSensorFromCmd(parms)) === false) continue;
+			sens.setDescription(parms.value);
+			continue;
+		}
+		if (cmd.cmd == 'controller_setdescr') {
+			if (!parms.value) {
+				logger.error('Missing value with handleCommand:', cmd);
+				continue;
+			}
+			controller.setDescription(parms.value);
+			continue;
+		}
+		if (cmd.cmd == 'rules_def') {
+			if (!parms.rules) {
+				logger.error('Missing rules with handleCommand:', cmd);
+				continue;
+			}
+			domopi.setAutomationRules(JSON.parse(parms.rules));
+		}
 	}
-	scheduler.updateStatus(data.data);
 }
-*/
 
 /**
  * Send the full device list to domopi
@@ -119,11 +117,11 @@ function _cleanData(data) {
  */
 function sendFullDeviceList(body)
 {
+	logger.debug('sendFullDeviceList');
 	if (!body) { return; }
 	var data = { data: body, status: 'ok', zid: zid, key: key };
-	data['updated'] = Date.now(); // TODO: les dates sont en UTC ?????
+	data['updated'] = Date.now(); // All Dates are in UTC
 	scheduler.updateStatus(body);
-	//_cleanData(data);
 	proxy.mkpost('/poller/devices', JSON.stringify(data), function(resp) {
 		if (resp === false) {
 			logger.info('FullDeviceList not sent: retry...');
@@ -147,11 +145,11 @@ function getFullDeviceList(next)
  */
 function sendDeltaDeviceList(body)
 {
+	logger.debug('sendDeltaDeviceList');
 	if (!body) return; 	// But must make a call to receive the commands back !
 	var data = { data: body, status: 'ok', zid: zid, key: key };
 	data['updated'] = Date.now(); // All Dates are in UTC
 	scheduler.updateStatus(body);
-	//_cleanData(data);
 	proxy.mkpost('/poller/devices', JSON.stringify(data), function(resp) {
 		if (resp === false) {
 			logger.info('DeltaDeviceList not sent: retry...');

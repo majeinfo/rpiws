@@ -7,15 +7,15 @@ var domopi = require('../config/domopi'),
     logger = require('../modules/logger');
 
 // Get the current metric value
-function _getCurrentMetric(details) {
-	console.log('_getCurrentMetric:', details);
-	if (!('devid' in details) || !('instid' in details) || !('sid' in details)) {
-		logger.info('Missing attribute in _getCurrentMetric');	// TODO: remonter au serveur Web
+function _getCurrentMetric(obj) {
+	console.log('_getCurrentMetric:', obj);
+	if (!('devid' in obj) || !('instid' in obj) || !('sid' in obj)) {
+		logger.info('Missing attribute in _getCurrentMetric');
 		return false;
 	}
-	var sens = new sensor.findSensor(details.devid, details.instid, details.sid);
+	var sens = new sensor.findSensor(obj.devid, obj.instid, obj.sid);
 	if (!sens) {
-		logger.info('sensor not found in _getCurrentMetric');	// TODO: remonter au serveur Web
+		logger.info('sensor not found in _getCurrentMetric');
 		return false;
 	}
 	return sens.getCurrentMetric();
@@ -24,13 +24,13 @@ function _getCurrentMetric(details) {
 // RULE format:
 // { description: 'xxxxx', conditions: [ ], actions: [ ] }
 // CONDITION format: (default AND)
-// { condtype: 'timecond'|'statuscond'|'thresholdcond'|'ruleconf', details: { }
-// 	if condtype == 'thresholdcond', details={ devid:, instid:, sid:, value:, testtype: '>|<|>=|<=|==|!=' }
-// 	if condtype == 'statuscond', details={ devid:, instid:, sid:, value:'on|off', testtype: '==|!=' }
-// 	if condtype == 'timecond', details={ starttime: 'hh:mm', endtime: 'hh:mm', days: '01234567' }
+// { condtype: 'timecond'|'statuscond'|'thresholdcond'|'ruleconf', ... }
+// 	if condtype == 'thresholdcond', devid:, instid:, sid:, value:, testtype: '>|<|>=|<=|==|!=' 
+// 	if condtype == 'statuscond', devid:, instid:, sid:, value:'on|off', testtype: '==|!=' 
+// 	if condtype == 'timecond', starttime: 'hh:mm', endtime: 'hh:mm', days: '01234567' 
 // ACTION format: (default AND)
-// { actiontype: 'sensorcmd'|'customcmd', details: {} }
-// 	if actiontype == sensorcmd, details={ devid:, instid:, sid:, value:'on|off' }
+// { actiontype: 'sensorcmd'|'customcmd', ... }
+// 	if actiontype == sensorcmd, devid:, instid:, sid:, value:'on|off' 
 
 // Check if a Rule is satisfied
 function _ruleSatisfied(rule) {
@@ -47,22 +47,19 @@ function _ruleSatisfied(rule) {
 			logger.error('Rule is missing a condtype:', rule.description);
 			return false;
 		}
-		if (!('details' in cond)) {
-			logger.error('Rule is missing details:', rule.description);
-			return false;
-		}
 		if (cond.condtype == 'thresholdcond') {
-			if ((level = _getCurrentMetric(cond.details)) === false) {
-				logger.info('Unknown Metric Value for:', cond.details);	// TODO: should be returned to the Web Server
+			if ((level = _getCurrentMetric(cond)) === false) {
+				logger.info('Unknown Metric Value for:', cond);	
 				return false;
 			}
 			try {
-				logger.debug('eval(', level + cond.details.testtype + cond.details.value, ')');
-				if (eval(level + cond.details.testtype + cond.details.value)) {
+				logger.debug('eval(', level + cond.testtype + cond.value, ')');
+				if (eval(level + cond.testtype + cond.value)) {
 					is_satisfied = true; 
 					continue; 
 				}
 				else {
+					logger.error('rule', rule.description, 'could not be evaluated:', cond);
 					return false;
 				}
 			}
@@ -77,17 +74,17 @@ function _ruleSatisfied(rule) {
 			    parts;
 
 			// Check the day of the week
-			if ('days' in cond.details && cond.details.days != '') {
+			if ('days' in cond.days && cond.days != '') {
 				var curday = curdate.getDay();
-				if (cond.details.days.indexOf(curday.toString()) == -1) return false;
+				if (cond.days.indexOf(curday.toString()) == -1) return false;
 			}
 
-			if ('starttime' in cond.details && cond.details.starttime != '') {
-				parts = cond.details.starttime.split(':');
+			if ('starttime' in cond && cond.starttime != '') {
+				parts = cond.starttime.split(':');
 				starttime = parseInt(parts[0]) * 60 + parseInt(parts[1]);
 			}
-			if ('endtime' in cond.details && cond.details.endtime != '') {
-				parts = cond.details.endtime.split(':');
+			if ('endtime' in cond && cond.endtime != '') {
+				parts = cond.endtime.split(':');
 				endtime = parseInt(parts[0]) * 60 + parseInt(parts[1]);
 			}
 
@@ -131,23 +128,14 @@ function _doActions(rule) {
                         logger.error('Action is missing an actiontype:', rule.description);
                         continue;
                 }
-		if (!('details' in action)) {
-			logger.error('Action is missing details:', rule.description);
-			continue;
-		}
 		if (action.actiontype == 'sensorcmd') {
-			var details = action.details;
-			if (!('devid' in details) || !('instid' in details) || !('sid' in details)) {
-				logger.info('Missing attribute in _doActions');	// TODO: remonter au serveur Web
-				continue;
-			}
-			var sens = new sensor.findSensor(details.devid, details.instid, details.sid);
+			var sens = new sensor.findSensor(action.devid, action.instid, action.sid);
 			if (!sens) {
-				logger.info('sensor not found in _doActions');	// TODO: remonter au serveur Web
+				logger.info('sensor not found in _doActions');
 				continue;
 			}
 			// Send the command (do we need to check if the status is already good ?)
-			sens.sendCommand(details.value, function(body) {
+			sens.sendCommand(action.value, function(body) {
 				if (!body) {
 					logger.error('Action failed');
 				}
@@ -157,7 +145,6 @@ function _doActions(rule) {
 			logger.error('Action has unknown actiontype:', rule.description, action.actiontype);
 		}
 	}
-
 }
 
 // Check the Automation Rules

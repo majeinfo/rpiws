@@ -11,12 +11,13 @@ var srvHost = 'localhost';
 var srvPort = 3001;
 
 var connect = function(host, port) {
+	logger.debug('connect to', host, ':', port);
 	srvHost = host;
 	srvPort = port;
 }
 
 function mkget(url, next) {
-	logger.debug(url);
+	logger.debug('mkget:', url);
 	var headers = {};
 	var options = { method: 'GET', path: url, port: srvPort, hostname: srvHost, headers: headers };
 	logger.debug(options);
@@ -39,7 +40,7 @@ function mkget(url, next) {
 };
 
 function mkpost(url, data, next) {
-	logger.debug(url);
+	logger.debug('mkpost:', url);
 	var headers = { 
 		'Content-Type': 'application/json;charset=utf-8', 
 		'Content-Length': Buffer.byteLength(data),
@@ -76,7 +77,7 @@ function mkpost(url, data, next) {
 };
 
 function mkput(url, data, next) {
-	logger.debug(url);
+	logger.debug('mkput:', url);
 	var headers = { 
 		//'Content-Type': 'application/x-www-form-urlencoded', 
 		'Content-Type': 'application/json;charset=utf-8', 

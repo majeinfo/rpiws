@@ -161,4 +161,12 @@ exports.getAutomationRules = function() {
 	return {}
 }
 
+// Set the Automation Rules
+exports.setAutomationRules = function(rules) {
+	logger.debug('setAutomationRules');
+	var conf = exports.getDomopiConf();
+	conf['rules'] = rules;
+	exports.setDomopiConf(conf);
+}
+
 // EOF 

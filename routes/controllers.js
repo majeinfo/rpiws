@@ -19,6 +19,12 @@ router.get('/ping', function(req, res, next) {
 });
 
 /**
+ * TODO: Check that Client known our secret Key
+ */
+router.get('/attach', function(req, res, next) {
+});
+
+/**
  * PUT a Controller Description
  */
 router.put('/setdescr', function(req, res, next) {
