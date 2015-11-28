@@ -65,8 +65,7 @@ var sharedSecret = domopi.getDomopiKey();
  * GET a full listing of Automation RULES
  */
 router.get('/rules', function(req, res, next) {
-	var cfg = domopi.getDomopiConf();	// TODO: get RULES
-	var rules = ('rules' in cfg) ? cfg.rules: {};
+	var rules = domopi.getAutomationRules();
 	res.json({ status: 'ok', rules: rules });
 });
 

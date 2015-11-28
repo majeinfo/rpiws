@@ -23,9 +23,24 @@ var config = require('../config/local'),
  
 var zid = domopi.getZid();
 var key = domopi.getDomopiKey();
+var doversion = domopi.getDomopiVersion();
 var fullDeviceListSent = false;
 var lastPollTime = 0;
 var lastConfMTime = 0;
+
+/**
+ * Send the Controller conf at startup
+ */
+function sendControllerConf() {
+	logger.debug('sendControllerConf');
+	var body = { doversion: doversion };
+	var data = { data: body, status: 'ok', zid: zid, key: key, evttype: 'confinit', updated: Date.now() };
+	proxy.mkpost('/poller/events', JSON.stringify(data), function(resp) {
+		if (resp === false) {
+			logger.info('confinit not sent: NO retry');
+		}
+	});
+}
 
 /**
  * Get a Sensor from cmd content
@@ -101,6 +116,17 @@ function handleCommand(resp)
 			controller.setDescription(parms.value);
 			continue;
 		}
+		if (cmd.cmd == 'controller_getlogs') {
+			var cbuf = logger.circularBuffer.toarray();
+			var data = { data: cbuf, status: 'ok', zid: zid, key: key, evttype: 'logs', updated: Date.now() };
+			proxy.mkpost('/poller/events', JSON.stringify(data), function(resp) {
+				if (resp === false) {
+					logger.info('Logs could not be sent');
+				}
+				else {
+				}
+			});
+		}
 		if (cmd.cmd == 'rules_def') {
 			if (!parms.rules) {
 				logger.error('Missing rules with handleCommand:', cmd);
@@ -119,10 +145,9 @@ function sendFullDeviceList(body)
 {
 	logger.debug('sendFullDeviceList');
 	if (!body) { return; }
-	var data = { data: body, status: 'ok', zid: zid, key: key };
-	data['updated'] = Date.now(); // All Dates are in UTC
+	var data = { data: body, status: 'ok', zid: zid, key: key, evttype: 'sensors', updated: Date.now() };
 	scheduler.updateStatus(body);
-	proxy.mkpost('/poller/devices', JSON.stringify(data), function(resp) {
+	proxy.mkpost('/poller/events', JSON.stringify(data), function(resp) {
 		if (resp === false) {
 			logger.info('FullDeviceList not sent: retry...');
 		}
@@ -147,10 +172,9 @@ function sendDeltaDeviceList(body)
 {
 	logger.debug('sendDeltaDeviceList');
 	if (!body) return; 	// But must make a call to receive the commands back !
-	var data = { data: body, status: 'ok', zid: zid, key: key };
-	data['updated'] = Date.now(); // All Dates are in UTC
+	var data = { data: body, status: 'ok', zid: zid, key: key, evttype: 'sensors', updated: Date.now() };
 	scheduler.updateStatus(body);
-	proxy.mkpost('/poller/devices', JSON.stringify(data), function(resp) {
+	proxy.mkpost('/poller/events', JSON.stringify(data), function(resp) {
 		if (resp === false) {
 			logger.info('DeltaDeviceList not sent: retry...');
 		}
@@ -206,6 +230,9 @@ function poller()
 
 // Set parameters:
 proxy.connect(config.poll_externalSrvHost, config.poll_externalSrvPort);
+
+// Send the current conf
+sendControllerConf();
 
 // Now, launch the poller that will send the delta device list on regular basis
 setInterval(poller, config.poll_interval * 1000);

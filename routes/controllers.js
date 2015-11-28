@@ -25,6 +25,27 @@ router.get('/attach', function(req, res, next) {
 });
 
 /**
+ * Starts Association Discovery
+ */
+// TODO
+router.get('/discovery/:cmd', function(req, res, next) {
+	if (req.params.cmd == 'start') {
+	}
+	if (req.params.cmd == 'stop') {
+	}
+	res.json({ status: 'ok' });
+});
+
+/**
+ * Send the Circular Log back
+ */
+router.get('/logs', function(req, res, next) {
+	var cbuf = logger.circularBuffer.toarray();
+	console.log(cbuf);
+	res.json({ status: 'ok' });
+});
+
+/**
  * PUT a Controller Description
  */
 router.put('/setdescr', function(req, res, next) {

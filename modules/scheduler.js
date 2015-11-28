@@ -64,7 +64,7 @@ function _ruleSatisfied(rule) {
 				}
 			}
 			catch (e) {
-				logger.error('eval failed');
+				logger.error('eval failed:', level, cond.testtype, cond.value);
 			}
 		}
 		else if (cond.condtype == 'timecond') {

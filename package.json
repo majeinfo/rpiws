@@ -14,6 +14,7 @@
     "express-session": "~1.11.3",
     "moment": "~2.10.6",
     "morgan": "~1.6.1",
-    "winston": "~2.1.0"
+    "winston": "~2.1.0",
+    "circular-buffer": "~0.0.6"
   }
 }
