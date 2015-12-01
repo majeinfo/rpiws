@@ -25,7 +25,7 @@ exports.getDomopiVersion = function() {
 		logger.debug(dversionFile, 'contains:', version);
 	}
 	catch (e) {
-		logger.error('getDomopiVersion:', e);
+		logger.error('getDomopiVersion:' + e);
 	}
 	return version;
 }
@@ -41,7 +41,7 @@ exports.getZid = function() {
 		logger.debug(zidFile, 'contains:', zid);
 	}
 	catch (e) {
-		logger.error('getZid:', e);
+		logger.error('getZid:' + e);
 	}
 	return _zid = zid;
 }
@@ -57,7 +57,7 @@ exports.getDomopiKey = function() {
 		logger.debug(keyFile, 'contains:', key);
 	}
 	catch (e) {
-		logger.error('getDomopiKey:', e);
+		logger.error('getDomopiKey:' + e);
 	}
 	return _key = key;
 }
@@ -73,7 +73,7 @@ exports.getDomopiConf = function() {
 		return confCache;
 	}
 	catch (e) {
-		logger.error('getDomopiConf:', e);
+		logger.error('getDomopiConf:' + e);
 
 		try {
 			// Try to create an empty file
@@ -82,7 +82,7 @@ exports.getDomopiConf = function() {
 			}
 		}
 		catch (e) {
-			logger.error('Cannot create default Domopi ConfFile:', e);
+			logger.error('Cannot create default Domopi ConfFile:' + e);
 		}
 	}
 	return {};
@@ -97,7 +97,7 @@ exports.setDomopiConf = function(conf) {
 		fs.writeFileSync(confFile, json, 'utf8'); 
 	} 
 	catch (e) {
-		logger.error('setDomopiConf:', e);
+		logger.error('setDomopiConf:' + e);
 	}
 }
 
@@ -109,7 +109,7 @@ exports.getDomopiConfMTime = function() {
 		return stats.mtime.getTime();
 	}
 	catch (e) {
-		logger.error('getDomopiConfMTime:', e);
+		logger.error('getDomopiConfMTime:' + e);
 	}
 	return -1;
 }

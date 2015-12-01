@@ -47,12 +47,12 @@ function sendControllerConf() {
  */
 function _getSensorFromCmd(p) {
 	if (!p.devid || !p.instid || !p.sid) {
-		logger.error('Missing devid or instid or sid with handleCommand:', p);
+		logger.error('Missing devid or instid or sid with handleCommand:' + p);
 		return false;
 	}
 	var sens = sensor.findSensor(p.devid, p.instid, p.sid);
 	if (!(sens)) {
-		logger.error('Sensor not found !', p.devid, p.instid, p.sid);
+		logger.error('Sensor not found:' + p.devid + p.instid + p.sid);
 		return false;
 	}
 
@@ -90,7 +90,7 @@ function handleCommand(resp)
 			var parms = JSON.parse(cmd.parms);
 		}
 		catch(e) {
-			logger.error('Error parsing cmd.parms:', cmd.parms);
+			logger.error('Error parsing cmd.parms:' + cmd.parms);
 			continue;
 		}
 
@@ -101,7 +101,7 @@ function handleCommand(resp)
 		}
 		if (cmd.cmd == 'sensor_setdescr') {
 			if (!parms.value) {
-				logger.error('Missing value with handleCommand:', cmd);
+				logger.error('Missing value with handleCommand:' + cmd);
 				continue;
 			}
 			if ((sens = _getSensorFromCmd(parms)) === false) continue;
@@ -110,7 +110,7 @@ function handleCommand(resp)
 		}
 		if (cmd.cmd == 'controller_setdescr') {
 			if (!parms.value) {
-				logger.error('Missing value with handleCommand:', cmd);
+				logger.error('Missing value with handleCommand:' + cmd);
 				continue;
 			}
 			controller.setDescription(parms.value);
@@ -129,7 +129,7 @@ function handleCommand(resp)
 		}
 		if (cmd.cmd == 'rules_def') {
 			if (!parms.rules) {
-				logger.error('Missing rules with handleCommand:', cmd);
+				logger.error('Missing rules with handleCommand:' + cmd);
 				continue;
 			}
 			domopi.setAutomationRules(JSON.parse(parms.rules));

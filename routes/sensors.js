@@ -58,7 +58,7 @@ router.get('/command/:devid/:instid/:sid/:command', function(req, res, next) {
 	
 	var sens = sensor.findSensor(devid, instid, sid);
 	if (!sens) {
-		logger.error('/command received bad values:', devid, instid, sid);
+		logger.error('/command received bad values:' + devid + ' ' + instid + ' ' + sid);
 		res.json({ status: 'error', msg: 'Sensor not found' });
 		return;
 	}
@@ -103,7 +103,7 @@ router.put('/setdescr/:devid/:instid/:sid', function(req, res, next) {
 	*/
 	var sens = sensor.findSensor(devid, instid, sid);
 	if (!sens) {
-		logger.error('/setdescr received bad values:', devid, instid, sid);
+		logger.error('/setdescr received bad values:' + devid + ' ' + instid + ' ' + sid);
 		res.json({ status: 'error', msg: 'Sensor not found' });
 		return;
 	}

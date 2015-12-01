@@ -44,7 +44,7 @@ function _ruleSatisfied(rule) {
 		var cond = rule.conditions[i];
 		logger.debug('Evaluate condition:', cond);
 		if (!('condtype' in cond)) {
-			logger.error('Rule is missing a condtype:', rule.description);
+			logger.error('Rule is missing a condtype:' + rule.description);
 			return false;
 		}
 		if (cond.condtype == 'thresholdcond') {
@@ -59,12 +59,12 @@ function _ruleSatisfied(rule) {
 					continue; 
 				}
 				else {
-					logger.error('rule', rule.description, 'could not be evaluated:', cond);
+					logger.error('rule' + rule.description + 'could not be evaluated:' + cond);
 					return false;
 				}
 			}
 			catch (e) {
-				logger.error('eval failed:', level, cond.testtype, cond.value);
+				logger.error('eval failed:' + level + ' ' + cond.testtype + ' ' + cond.value);
 			}
 		}
 		else if (cond.condtype == 'timecond') {
@@ -107,7 +107,7 @@ function _ruleSatisfied(rule) {
 		else if (cond.condtype == 'statuscond') {
 		}
 		else {
-			logger.error('Rule has unknown condtype:', rule.description, cond.condtype);
+			logger.error('Rule has unknown condtype:' + rule.description + ' ' + cond.condtype);
 			return false;
 		}
 	}
@@ -125,7 +125,7 @@ function _doActions(rule) {
 
                 logger.debug('Execute action:', action);
                 if (!('actiontype' in action)) {
-                        logger.error('Action is missing an actiontype:', rule.description);
+                        logger.error('Action is missing an actiontype:' + rule.description);
                         continue;
                 }
 		if (action.actiontype == 'sensorcmd') {
@@ -142,7 +142,7 @@ function _doActions(rule) {
 			});
 		}
 		else {	
-			logger.error('Action has unknown actiontype:', rule.description, action.actiontype);
+			logger.error('Action has unknown actiontype:' + rule.description + ' ' + action.actiontype);
 		}
 	}
 }
