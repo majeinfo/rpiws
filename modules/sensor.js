@@ -22,7 +22,7 @@ Sensor.prototype.getCurrentMetric = function() {
 	var data = this.data;
 	logger.debug('Data for Sensor:', data);
         if (!('metrics' in data)) {
-                logger.info('Missing metrics in _getCurrentMetric');    // TODO: remonter au serveur Web ?
+                logger.info('Missing metrics in _getCurrentMetric');
                 return false;
         }
 

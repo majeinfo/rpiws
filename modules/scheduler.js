@@ -4,7 +4,23 @@
 //
 var domopi = require('../config/domopi'),
     sensor = require('../modules/sensor'),
+    proxy = require('../modules/proxy'),
     logger = require('../modules/logger');
+
+var zid = domopi.getZid();
+var key = domopi.getDomopiKey();
+
+// Send an email notification demand to remote web
+function _sendEmailNotification(email, subject) {
+        logger.debug('_sendEmailNotification');
+        var body = { email: email, subject: subject };
+        var data = { data: body, status: 'ok', zid: zid, key: key, evttype: 'sendemail', updated: Date.now() };
+        proxy.mkpost('/poller/events', JSON.stringify(data), function(resp) {
+                if (resp === false) {
+                        logger.info('email notifcation not sent: NO retry');
+                }
+        });
+}
 
 // Get the current metric value
 function _getCurrentMetric(obj) {
@@ -58,13 +74,10 @@ function _ruleSatisfied(rule) {
 					is_satisfied = true; 
 					continue; 
 				}
-				else {
-					logger.error('rule' + rule.description + 'could not be evaluated:' + cond);
-					return false;
-				}
 			}
 			catch (e) {
 				logger.error('eval failed:' + level + ' ' + cond.testtype + ' ' + cond.value);
+				return false;
 			}
 		}
 		else if (cond.condtype == 'timecond') {
@@ -90,6 +103,7 @@ function _ruleSatisfied(rule) {
 
 			// If starttime only, we must check if we are in the same minute
 			// (the user wants "this" to be executed AT HH:MM)
+			// TODO: make sure stored time are in UTC
 			logger.debug('starttime:', starttime, 'endtime:', endtime);
 			if (starttime && !endtime) {
 				var curtime = curdate.getUTCHours() * 60 + curdate.getUTCMinutes();
@@ -104,7 +118,21 @@ function _ruleSatisfied(rule) {
 			if (starttime && endtime) {
 			}
 		}
-		else if (cond.condtype == 'statuscond') {
+		else if (cond.condtype == 'statuscond') {	// same as Thresholdcond ?
+			if ((level = _getCurrentMetric(cond)) === false) {
+				logger.info('Unknown Metric Value for:', cond);	
+				return false;
+			}
+			try {
+				if (eval(level + cond.testtype + cond.value)) {
+					is_satisfied = true; 
+					continue; 
+				}
+			}
+			catch (e) {
+				logger.error('eval failed:' + level + ' ' + cond.testtype + ' ' + cond.value);
+				return false;
+			}
 		}
 		else {
 			logger.error('Rule has unknown condtype:' + rule.description + ' ' + cond.condtype);
@@ -141,6 +169,10 @@ function _doActions(rule) {
 				}
 			});
 		}
+		else if (action.actiontype == 'emailcmd') {
+			logger.debug('should send an email to: ' + action.email + ' with subject: ' + action.subject);
+			_sendEmailNotification(action.email, action.subject)
+		}
 		else {	
 			logger.error('Action has unknown actiontype:' + rule.description + ' ' + action.actiontype);
 		}
@@ -154,6 +186,7 @@ function _checkRules() {
 
 	for (i in rules) {
 		var rule = rules[i];
+		logger.debug('Check Rule: ' + rule.description);
 		if (_ruleSatisfied(rule)) {
 			_doActions(rule);
 		}
