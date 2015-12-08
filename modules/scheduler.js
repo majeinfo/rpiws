@@ -2,7 +2,8 @@
 // SCHEDULER
 // ---------------------------------------------------------
 //
-var domopi = require('../config/domopi'),
+var fs = require('fs'),
+    domopi = require('../config/domopi'),
     sensor = require('../modules/sensor'),
     proxy = require('../modules/proxy'),
     logger = require('../modules/logger');
@@ -10,18 +11,35 @@ var domopi = require('../config/domopi'),
 var zid = domopi.getZid();
 var key = domopi.getDomopiKey();
 
-// Send an email notification demand to remote web
-function _sendEmailNotification(email, subject) {
-        logger.debug('_sendEmailNotification');
-        var body = { email: email, subject: subject };
-        var data = { data: body, status: 'ok', zid: zid, key: key, evttype: 'sendemail', updated: Date.now() };
-        proxy.mkpost('/poller/events', JSON.stringify(data), function(resp) {
-                if (resp === false) {
-                        logger.info('email notifcation not sent: NO retry');
-                }
-        });
+// Load the Condition Plugins
+var _conditionPlugins = {};
+var _plugFiles = fs.readdirSync('./plugins/conditions');
+logger.debug(_plugFiles);
+for (plug in _plugFiles) {
+	var parts = _plugFiles[plug].split('.');
+	if (parts.length != 2 || parts[1] != 'js') {
+		logger.info('Plugin name ' + _plugFiles[plug] + ' ignored');
+		continue;
+	}
+	plugname = parts[0];
+	_conditionPlugins[plugname] = require('../plugins/conditions/' + _plugFiles[plug]);
 }
 
+// Load the Action Plugins
+var _actionPlugins = {};
+_plugFiles = fs.readdirSync('./plugins/actions');
+logger.debug(_plugFiles);
+for (plug in _plugFiles) {
+	var parts = _plugFiles[plug].split('.');
+	if (parts.length != 2 || parts[1] != 'js') {
+		logger.info('Plugin name ' + _plugFiles[plug] + ' ignored');
+		continue;
+	}
+	plugname = parts[0];
+	_actionPlugins[plugname] = require('../plugins/actions/' + _plugFiles[plug]);
+}
+
+/*
 // Get the current metric value
 function _getCurrentMetric(obj) {
 	console.log('_getCurrentMetric:', obj);
@@ -36,6 +54,7 @@ function _getCurrentMetric(obj) {
 	}
 	return sens.getCurrentMetric();
 }
+*/
 
 // RULE format:
 // { description: 'xxxxx', conditions: [ ], actions: [ ] }
@@ -63,6 +82,40 @@ function _ruleSatisfied(rule) {
 			logger.error('Rule is missing a condtype:' + rule.description);
 			return false;
 		}
+
+                // Must find a Plugin with matching name:
+                logger.debug('Test Condition: ' + cond.condtype + ' for rule ' + rule.description);
+                var found = false;
+                for (p in _conditionPlugins) {
+                        if (_conditionPlugins[p] == cond.condtype) {
+                                found = true;
+
+                                // Check parms and launch action
+                                var parm_ok = true;
+                                for (parm in _conditionPlugins[p].expectedParms) {
+                                        if (!cond[_conditionPlugins[p].expectedParms[parm]]) {
+                                                logger.error('Rule ' + rule.description +
+                                                                ' missing "' + cond[_conditionPlugins[p].expectedParms[parm]] +
+                                                                '" parameter for Condition ' + cond.condtype);
+                                                parm_ok = false;
+                                        }
+                                }
+                                if (parm_ok) {
+                                        if (_conditionPlugins[p].doCondition(cond)) {
+						is_satisfied = true;
+						continue;
+					}
+					return false;
+                                }
+                                break;
+                        }
+                }
+                if (!found) {
+                        logger.error('Rule ' + rule.description + ' has an unknown Condition Test: ' + cond.condtype);
+                        continue;
+                }
+
+		/*
 		if (cond.condtype == 'thresholdcond') {
 			if ((level = _getCurrentMetric(cond)) === false) {
 				logger.info('Unknown Metric Value for:', cond);	
@@ -134,10 +187,7 @@ function _ruleSatisfied(rule) {
 				return false;
 			}
 		}
-		else {
-			logger.error('Rule has unknown condtype:' + rule.description + ' ' + cond.condtype);
-			return false;
-		}
+		*/
 	}
 
 	return is_satisfied;
@@ -150,32 +200,38 @@ function _doActions(rule) {
 
 	for (i in rule.actions) {
 		var action = rule.actions[i];
+		if (!('actiontype' in action)) {
+			logger.error('Action is missing an actiontype:' + rule.description);
+			return; 
+		}
 
-                logger.debug('Execute action:', action);
-                if (!('actiontype' in action)) {
-                        logger.error('Action is missing an actiontype:' + rule.description);
+		// Must find a Plugin with matching name:
+                logger.debug('Execute action: ' + action.actiontype + ' for rule ' + rule.description);
+		var found = false;
+		for (p in _actionPlugins) {
+			if (_actionPlugins[p] == action.actiontype) {
+				found = true;
+
+				// Check parms and launch action
+				var parm_ok = true;
+				for (parm in _actionPlugins[p].expectedParms) {
+					if (!action[_actionPlugins[p].expectedParms[parm]]) {
+						logger.error('Rule ' + rule.description +
+								' missing "' + action[_actionPlugins[p].expectedParms[parm]] + 
+								'" parameter for Action ' + action.actiontype);
+						parm_ok = false;
+					}
+				}
+				if (parm_ok) {
+					var res = _actionPlugins[p].doAction(action);
+				}
+				break;
+			}
+		}
+                if (!found) {
+                        logger.error('Rule ' + rule.description + ' has an unknown Action Type: ' + action.actiontype);
                         continue;
                 }
-		if (action.actiontype == 'sensorcmd') {
-			var sens = new sensor.findSensor(action.devid, action.instid, action.sid);
-			if (!sens) {
-				logger.info('sensor not found in _doActions');
-				continue;
-			}
-			// Send the command (do we need to check if the status is already good ?)
-			sens.sendCommand(action.value, function(body) {
-				if (!body) {
-					logger.error('Action failed');
-				}
-			});
-		}
-		else if (action.actiontype == 'emailcmd') {
-			logger.debug('should send an email to: ' + action.email + ' with subject: ' + action.subject);
-			_sendEmailNotification(action.email, action.subject)
-		}
-		else {	
-			logger.error('Action has unknown actiontype:' + rule.description + ' ' + action.actiontype);
-		}
 	}
 }
 
@@ -201,13 +257,6 @@ function updateStatus(data) {
 	_checkRules();
 }
 
-/*
-// Start the Scheduler
-function start() {
-}
-
-module.exports.start = start;
-*/
 module.exports.updateStatus = updateStatus;
 
 // EOF

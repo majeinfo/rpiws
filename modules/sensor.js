@@ -17,6 +17,11 @@ var Sensor = function(devid, instid, sid) {
 	this.data = {};
 }
 
+// Return Sensor simple name
+Sensor.prototype.getSimpleName = function() {
+	return this.devid + '-' + this.instid + '-' + this.sid;
+}
+
 // Get Sensor current Metric
 Sensor.prototype.getCurrentMetric = function() {
 	var data = this.data;
@@ -27,7 +32,7 @@ Sensor.prototype.getCurrentMetric = function() {
         }
 
         var level = data.metrics.level;
-        console.log('getCurrentMetrics:', level);
+        logger.debug('getCurrentMetrics:', level);
         if (level == undefined) return false;
 
         // Everything must be a string
@@ -54,6 +59,7 @@ function findSensor(devid, instid, sid) {
 		var sens = mySensors[i];
 		if (sens.devid == devid && sens.instid == instid && sens.sid == sid) return sens;
 	}
+	logger.error('No Sensor found for: ' + devid + '/' + instid + '/' + sid);
 	return false;
 }
 
