@@ -151,6 +151,7 @@ function loginAndGetCookie(method, url, data, next) {
 	//{"form":true,"login":"admin","password":"admin","keepme":false,"default_ui":1}
 	_mkpost('/ZAutomation/api/v1/login', JSON.stringify(auth_data), function(body) {
 		logger.debug('login result: ', body);
+		if (!body) return; // Error sent back
 		if (method == 'POST') {
 			_mkpost(url, data, next);
 		}

@@ -15,7 +15,7 @@ var key = domopi.getDomopiKey();
 var _conditionPlugins = {};
 var _plugFiles = fs.readdirSync('./plugins/conditions');
 logger.debug(_plugFiles);
-for (plug in _plugFiles) {
+for (var plug in _plugFiles) {
 	var parts = _plugFiles[plug].split('.');
 	if (parts.length != 2 || parts[1] != 'js') {
 		logger.info('Plugin name ' + _plugFiles[plug] + ' ignored');
@@ -29,7 +29,7 @@ for (plug in _plugFiles) {
 var _actionPlugins = {};
 _plugFiles = fs.readdirSync('./plugins/actions');
 logger.debug(_plugFiles);
-for (plug in _plugFiles) {
+for (var plug in _plugFiles) {
 	var parts = _plugFiles[plug].split('.');
 	if (parts.length != 2 || parts[1] != 'js') {
 		logger.info('Plugin name ' + _plugFiles[plug] + ' ignored');
@@ -38,23 +38,6 @@ for (plug in _plugFiles) {
 	plugname = parts[0];
 	_actionPlugins[plugname] = require('../plugins/actions/' + _plugFiles[plug]);
 }
-
-/*
-// Get the current metric value
-function _getCurrentMetric(obj) {
-	console.log('_getCurrentMetric:', obj);
-	if (!('devid' in obj) || !('instid' in obj) || !('sid' in obj)) {
-		logger.info('Missing attribute in _getCurrentMetric');
-		return false;
-	}
-	var sens = new sensor.findSensor(obj.devid, obj.instid, obj.sid);
-	if (!sens) {
-		logger.info('sensor not found in _getCurrentMetric');
-		return false;
-	}
-	return sens.getCurrentMetric();
-}
-*/
 
 // RULE format:
 // { description: 'xxxxx', conditions: [ ], actions: [ ] }
@@ -75,7 +58,7 @@ function _ruleSatisfied(rule) {
 	if (!('conditions' in rule)) return false;
 	if (!('description' in rule)) return false;
 
-	for (i in rule.conditions) {
+	for (var i in rule.conditions) {
 		var cond = rule.conditions[i];
 		logger.debug('Evaluate condition:', cond);
 		if (!('condtype' in cond)) {
@@ -86,13 +69,13 @@ function _ruleSatisfied(rule) {
                 // Must find a Plugin with matching name:
                 logger.debug('Test Condition: ' + cond.condtype + ' for rule ' + rule.description);
                 var found = false;
-                for (p in _conditionPlugins) {
-                        if (_conditionPlugins[p] == cond.condtype) {
+                for (var p in _conditionPlugins) {
+                        if (p == cond.condtype) {
                                 found = true;
 
                                 // Check parms and launch action
                                 var parm_ok = true;
-                                for (parm in _conditionPlugins[p].expectedParms) {
+                                for (var parm in _conditionPlugins[p].expectedParms) {
                                         if (!cond[_conditionPlugins[p].expectedParms[parm]]) {
                                                 logger.error('Rule ' + rule.description +
                                                                 ' missing "' + cond[_conditionPlugins[p].expectedParms[parm]] +
@@ -114,80 +97,6 @@ function _ruleSatisfied(rule) {
                         logger.error('Rule ' + rule.description + ' has an unknown Condition Test: ' + cond.condtype);
                         continue;
                 }
-
-		/*
-		if (cond.condtype == 'thresholdcond') {
-			if ((level = _getCurrentMetric(cond)) === false) {
-				logger.info('Unknown Metric Value for:', cond);	
-				return false;
-			}
-			try {
-				logger.debug('eval(', level + cond.testtype + cond.value, ')');
-				if (eval(level + cond.testtype + cond.value)) {
-					is_satisfied = true; 
-					continue; 
-				}
-			}
-			catch (e) {
-				logger.error('eval failed:' + level + ' ' + cond.testtype + ' ' + cond.value);
-				return false;
-			}
-		}
-		else if (cond.condtype == 'timecond') {
-			var curdate = new Date(),
- 			    starttime = undefined,
-			    endtime = undefined,
-			    parts;
-
-			// Check the day of the week
-			if ('days' in cond.days && cond.days != '') {
-				var curday = curdate.getDay();
-				if (cond.days.indexOf(curday.toString()) == -1) return false;
-			}
-
-			if ('starttime' in cond && cond.starttime != '') {
-				parts = cond.starttime.split(':');
-				starttime = parseInt(parts[0]) * 60 + parseInt(parts[1]);
-			}
-			if ('endtime' in cond && cond.endtime != '') {
-				parts = cond.endtime.split(':');
-				endtime = parseInt(parts[0]) * 60 + parseInt(parts[1]);
-			}
-
-			// If starttime only, we must check if we are in the same minute
-			// (the user wants "this" to be executed AT HH:MM)
-			// TODO: make sure stored time are in UTC
-			logger.debug('starttime:', starttime, 'endtime:', endtime);
-			if (starttime && !endtime) {
-				var curtime = curdate.getUTCHours() * 60 + curdate.getUTCMinutes();
-				logger.debug('curtime:', curtime);
-				if (starttime <= curtime && (starttime+60) >= curtime) {
-					is_satisfied = true;
-					continue;
-				}
-			}
-			// (the user wants "this" to be executed from HH:MM until HH:MM)
-			// TODO: ?????
-			if (starttime && endtime) {
-			}
-		}
-		else if (cond.condtype == 'statuscond') {	// same as Thresholdcond ?
-			if ((level = _getCurrentMetric(cond)) === false) {
-				logger.info('Unknown Metric Value for:', cond);	
-				return false;
-			}
-			try {
-				if (eval(level + cond.testtype + cond.value)) {
-					is_satisfied = true; 
-					continue; 
-				}
-			}
-			catch (e) {
-				logger.error('eval failed:' + level + ' ' + cond.testtype + ' ' + cond.value);
-				return false;
-			}
-		}
-		*/
 	}
 
 	return is_satisfied;
@@ -198,7 +107,7 @@ function _doActions(rule) {
 	if (!('actions' in rule)) return false;
 	if (!('description' in rule)) return false;
 
-	for (i in rule.actions) {
+	for (var i in rule.actions) {
 		var action = rule.actions[i];
 		if (!('actiontype' in action)) {
 			logger.error('Action is missing an actiontype:' + rule.description);
@@ -208,13 +117,13 @@ function _doActions(rule) {
 		// Must find a Plugin with matching name:
                 logger.debug('Execute action: ' + action.actiontype + ' for rule ' + rule.description);
 		var found = false;
-		for (p in _actionPlugins) {
-			if (_actionPlugins[p] == action.actiontype) {
+		for (var p in _actionPlugins) {
+			if (p == action.actiontype) {
 				found = true;
 
 				// Check parms and launch action
 				var parm_ok = true;
-				for (parm in _actionPlugins[p].expectedParms) {
+				for (var parm in _actionPlugins[p].expectedParms) {
 					if (!action[_actionPlugins[p].expectedParms[parm]]) {
 						logger.error('Rule ' + rule.description +
 								' missing "' + action[_actionPlugins[p].expectedParms[parm]] + 
@@ -240,7 +149,7 @@ function _checkRules() {
 	var rules = domopi.getAutomationRules();
 	logger.debug('_checkRules');
 
-	for (i in rules) {
+	for (var i in rules) {
 		var rule = rules[i];
 		logger.debug('Check Rule: ' + rule.description);
 		if (_ruleSatisfied(rule)) {
@@ -251,7 +160,7 @@ function _checkRules() {
 
 // Handle the current status of sensors
 function updateStatus(data) {
-	for (i in data) {
+	for (var i in data) {
 		sensor.updateSensors(data[i].devid, data[i].instid, data[i].sid, data[i]);
 	}
 	_checkRules();

@@ -59,7 +59,6 @@ function findSensor(devid, instid, sid) {
 		var sens = mySensors[i];
 		if (sens.devid == devid && sens.instid == instid && sens.sid == sid) return sens;
 	}
-	logger.error('No Sensor found for: ' + devid + '/' + instid + '/' + sid);
 	return false;
 }
 

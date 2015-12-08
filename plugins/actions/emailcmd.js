@@ -15,7 +15,7 @@ function _sendEmailNotification(email, subject) {
 	logger.debug('_sendEmailNotification');
 	var body = { email: email, subject: subject };
 	var data = { data: body, status: 'ok', zid: zid, key: key, evttype: 'sendemail', updated: Date.now() };
-	proxy.mkpost('/poller/events', JSON.stringify(data), function(resp) {
+	proxy.mkpost('/poller/sendemail', JSON.stringify(data), function(resp) {
 		if (resp === false) {
 			logger.info('email notification not sent: NO retry');
 		}
