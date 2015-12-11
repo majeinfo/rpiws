@@ -116,6 +116,10 @@ function handleCommand(resp)
 			controller.setDescription(parms.value);
 			continue;
 		}
+		if (cmd.cmd == 'controller_setparms') {
+			controller.setParms(parms);
+			continue;
+		}
 		if (cmd.cmd == 'controller_getlogs') {
 			var cbuf = logger.circularBuffer.toarray();
 			var data = { data: cbuf, status: 'ok', zid: zid, key: key, evttype: 'logs', updated: Date.now() };

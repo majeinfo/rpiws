@@ -3,13 +3,12 @@
 // ---------------------------------------------------------
 //
 var fs = require('fs'),
-    domopi = require('../config/domopi'),
+    rules = require('../modules/rules'),
     sensor = require('../modules/sensor'),
     proxy = require('../modules/proxy'),
     logger = require('../modules/logger');
 
-var zid = domopi.getZid();
-var key = domopi.getDomopiKey();
+// TODO: most of this code should be in modules/rules.js
 
 // Load the Condition Plugins
 var _conditionPlugins = {};
@@ -146,14 +145,23 @@ function _doActions(rule) {
 
 // Check the Automation Rules
 function _checkRules() {
-	var rules = domopi.getAutomationRules();
+	var autorules = rules.getRules();
 	logger.debug('_checkRules');
 
-	for (var i in rules) {
-		var rule = rules[i];
+	for (var i in autorules) {
+		var rule = autorules[i];
 		logger.debug('Check Rule: ' + rule.description);
 		if (_ruleSatisfied(rule)) {
-			_doActions(rule);
+			if (!rule.isTriggered()) {
+				_doActions(rule);
+				rule.setTrigger();
+			}
+			else {
+				logger.debug('Rule satisfied but already triggered !');
+			}
+		}
+		else {
+			rule.unsetTrigger();
 		}
 	}
 }

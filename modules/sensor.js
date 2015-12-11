@@ -53,6 +53,14 @@ Sensor.prototype.setDescription = function(newdesc, next) {
 	if (next) next();
 }
 
+// Set the Sensor Type
+Sensor.prototype.setType = function(stype, next) {
+        var cfg = domopi.getSensorConf(this.devid, this.instid, this.sid);
+        cfg.type = stype;
+        domopi.setSensorConf(this.devid, this.instid, this.sid, cfg);
+	if (next) next();
+}
+
 // Find a sensor in the bag
 function findSensor(devid, instid, sid) {
 	for (var i in mySensors) {
@@ -73,6 +81,7 @@ function updateSensors(devid, instid, sid, data) {
 	sens.data = data;
 }
 
+module.exports.getSensors = function() { return mySensors; }
 module.exports.updateSensors = updateSensors;
 module.exports.findSensor = findSensor;
 module.exports.Sensor = Sensor;

@@ -12,6 +12,7 @@ var express = require('express'),
     cookieParser = require('cookie-parser'),
     bodyParser = require('body-parser'),
     config = require('./config/local'),
+    domopi = require('./config/domopi'),
     logger = require('./modules/logger'),
     zwave = require('./modules/zwave'),
     users = require('./routes/users'),
@@ -110,5 +111,9 @@ app.use(function(err, req, res, next) {
 poller = require('./modules/poller');
 
 module.exports = app;
+
+var globalConf = domopi.getGlobalConf();
+logger.debug('GlobalConf: ');
+console.log(globalConf);
 
 // EOF

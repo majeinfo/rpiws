@@ -15,7 +15,7 @@ module.exports.doAction = function(action) {
 	var sens = new sensor.findSensor(action.devid, action.instid, action.sid);
 	if (!sens) {	// TODO: could be made at the upper level
 		logger.info('sensor not found in sensorcmd doAction');
-		return False;
+		return false;
 	}
 	//
 	// Send the command (do we need to check if the status is already good ?)
@@ -24,7 +24,7 @@ module.exports.doAction = function(action) {
 			logger.error('sensorcmd.doAction failed to send command "' + action.value + '" at Sensor ' + sens.getSimpleName());
 		}
 	});
-	return True;
+	return true;
 };
 
 // EOF

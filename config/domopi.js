@@ -3,6 +3,8 @@
 // ------------------------------------
 //
 var fs = require('fs'),
+    rules = require('../modules/rules'),
+    sensors = require('../modules/sensor'),
     logger = require('../modules/logger');
 
 var zidFile = '/etc/zbw/userid',
@@ -12,9 +14,6 @@ var zidFile = '/etc/zbw/userid',
     confCache = undefined,
     _zid = undefined,
     _key = undefined;
-
-// TODO: clean exit in case of file missing
-// TODO: send alert to ???? in case of errors ????
 
 // Read Domopi Version
 exports.getDomopiVersion = function() {
@@ -114,6 +113,54 @@ exports.getDomopiConfMTime = function() {
 	return -1;
 }
 
+// Set Global Default Parameters
+var _defaultGlob = {
+	implicit_rules: {
+		low_battery: {
+			low_level: 80,
+			email_subject: "Battery too low",
+			email_content: "Battery of Sensor {SENSOR:NAME} is too low ({SENSOR:METRIC_VALUE})"
+                			// + sname + ' is too low (' + allsensors[sens].getCurrentMetric() + ')'
+                			// TODO: il faut une fonction d'interpolation
+		}
+	}
+};
+function _setGlobalDefaultParms2(cfg, defaultCfg) {
+	for (var attr in defaultCfg) {
+		// If attribute not defined or empty
+		if (!cfg.hasOwnProperty(attr) || !cfg[attr]) {
+			cfg[attr] = defaultCfg[attr];
+		}
+		if (typeof cfg[attr] === 'object') {
+			_setGlobalDefaultParms2(cfg[attr], defaultCfg[attr]);
+		}
+	}
+}
+function _setGlobalDefaultParms(cfg) {
+	if (!('email' in cfg) || !cfg.email) {
+		logger.info('No default email address defined !');
+		cfg.email = '';
+	}
+	_setGlobalDefaultParms2(cfg, _defaultGlob);
+	return cfg;
+}
+
+// Extract the Global Parameters
+exports.getGlobalConf = function() {
+	var conf = exports.getDomopiConf();
+	if ('global' in conf) {
+		return _setGlobalDefaultParms(conf['global']);
+	}
+	return _setGlobalDefaultParms({});
+}
+
+// Save the Global Parameters
+exportssetGlobalConf = function(cfg) {
+	var conf = exports.getDomopiConf();
+	conf['global'] = cfg;
+	exports.setDomopiConf(conf);
+}
+
 // Extract the Controller description
 exports.getControllerConf = function() {
 	var conf = exports.getDomopiConf();
@@ -167,6 +214,27 @@ exports.setAutomationRules = function(rules) {
 	var conf = exports.getDomopiConf();
 	conf['rules'] = rules;
 	exports.setDomopiConf(conf);
+
+	// Re-create the Rules objects
+	rules.flushRules();
+	for (r in rules) { rules.addRule(rules[i]); }
+
+	// Add the implicit Rules !
+
+	// 1-check the battery level of all Sensor
+	var allsensors = sensors.getSensors();
+	var globconf = exports.getGlobalConf()['implicit_rules']['low_battery'];
+	for (var sens in allsensors) {
+		logger.debug('Sensor type: ' + allsensors[sens]['data'].devtype);
+		if (allsensors[sens]['data'].devtype == 'battery') {
+			var sname = allsensors[sens].getSimplename();
+			var descr = 'Battery of ' + sname;
+			var cond = { condtype: 'thresholdcond', testtype: '<=', value: globconf.low_level };
+			var act = { acttype: 'emailcmd', subject: globconf.email_subject, content: globconf.email_content };
+			var r = { is_implicit: true, description: descr, conditions: [cond], actions: [act] };
+			rules.addRule(r);
+		}
+	}
 }
 
 // EOF 
