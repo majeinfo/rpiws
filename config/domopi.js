@@ -3,7 +3,7 @@
 // ------------------------------------
 //
 var fs = require('fs'),
-    rules = require('../modules/rules'),
+    m_rules = require('../modules/rules'),
     sensors = require('../modules/sensor'),
     logger = require('../modules/logger');
 
@@ -216,8 +216,8 @@ exports.setAutomationRules = function(rules) {
 	exports.setDomopiConf(conf);
 
 	// Re-create the Rules objects
-	rules.flushRules();
-	for (r in rules) { rules.addRule(rules[i]); }
+	m_rules.flushRules();
+	for (var r in rules) { m_rules.addRule(rules[r]); }
 
 	// Add the implicit Rules !
 
@@ -232,9 +232,12 @@ exports.setAutomationRules = function(rules) {
 			var cond = { condtype: 'thresholdcond', testtype: '<=', value: globconf.low_level };
 			var act = { acttype: 'emailcmd', subject: globconf.email_subject, content: globconf.email_content };
 			var r = { is_implicit: true, description: descr, conditions: [cond], actions: [act] };
-			rules.addRule(r);
+			m_rules.addRule(r);
 		}
 	}
 }
+
+// Load the Rules at the start :
+exports.setAutomationRules(exports.getAutomationRules());
 
 // EOF 

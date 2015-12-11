@@ -2,6 +2,7 @@
 // Class for AUTOMATION RULES
 // ---------------------------------------------------------
 //
+var logger = require('../modules/logger');
 
 // Dictionnary of Rules
 var myRules = new Array();
@@ -40,6 +41,7 @@ function getRules() {
 
 // Create and memorize a new Rule
 function addRule(rule, is_implicit) {
+	logger.debug('addRule', rule);
 	var r = new Rule(rule, is_implicit);
 	myRules.push(r);
 	return r;
