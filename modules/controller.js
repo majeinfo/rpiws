@@ -11,7 +11,10 @@ exports.parameters = [
 	'description',
 	'timezone',
 	'email',
-	'phonenumber'
+	'phonenumber',
+	'location',	//address
+	'lat',
+	'lng'
 ];
 
 // Set the global Controller Parameters

@@ -27,6 +27,15 @@ var doversion = domopi.getDomopiVersion();
 var fullDeviceListSent = false;
 var lastPollTime = 0;
 var lastConfMTime = 0;
+var localIP = domopi.getMyLocalIP();
+logger.info('My local IP Address is ' + localIP);
+
+/**
+ * Fill the data body
+ */
+function _fillData(body, evttype) {
+	return { data: body, status: 'ok', zid: zid, key: key, evttype: evttype, update: Date.now(), localip:localIP };
+}
 
 /**
  * Send the Controller conf at startup
@@ -34,7 +43,7 @@ var lastConfMTime = 0;
 function sendControllerConf() {
 	logger.debug('sendControllerConf');
 	var body = { doversion: doversion };
-	var data = { data: body, status: 'ok', zid: zid, key: key, evttype: 'confinit', updated: Date.now() };
+	var data = _fillData(body, 'confinit');
 	proxy.mkpost('/poller/events', JSON.stringify(data), function(resp) {
 		if (resp === false) {
 			logger.info('confinit not sent: NO retry');
@@ -149,7 +158,7 @@ function sendFullDeviceList(body)
 {
 	logger.debug('sendFullDeviceList');
 	if (!body) { return; }
-	var data = { data: body, status: 'ok', zid: zid, key: key, evttype: 'sensors', updated: Date.now() };
+	var data = _fillData(body, 'sensors');
 	scheduler.updateStatus(body);
 	proxy.mkpost('/poller/events', JSON.stringify(data), function(resp) {
 		if (resp === false) {
@@ -176,7 +185,7 @@ function sendDeltaDeviceList(body)
 {
 	logger.debug('sendDeltaDeviceList');
 	if (!body) return; 	// But must make a call to receive the commands back !
-	var data = { data: body, status: 'ok', zid: zid, key: key, evttype: 'sensors', updated: Date.now() };
+	var data = _fillData(body, 'sensors');
 	scheduler.updateStatus(body);
 	proxy.mkpost('/poller/events', JSON.stringify(data), function(resp) {
 		if (resp === false) {

@@ -12,8 +12,9 @@ var express = require('express'),
 
 /**
  * Receive a PING and sends back our Version
+ * The "ID" is used to avoid cache perturbation
  */
-router.get('/ping', function(req, res, next) {
+router.get('/ping/:id', function(req, res, next) {
 	var version = domopi.getDomopiVersion();
 	res.json({ status: 'ok', doVersion: version });
 });

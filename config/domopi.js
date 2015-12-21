@@ -3,6 +3,7 @@
 // ------------------------------------
 //
 var fs = require('fs'),
+    os = require('os'),
     m_rules = require('../modules/rules'),
     sensors = require('../modules/sensor'),
     logger = require('../modules/logger');
@@ -239,5 +240,21 @@ exports.setAutomationRules = function(rules) {
 
 // Load the Rules at the start :
 exports.setAutomationRules(exports.getAutomationRules());
+
+// Get the local IP
+exports.getMyLocalIP = function() {
+        var networkInterfaces = os.networkInterfaces( );
+        for (var devName in networkInterfaces) {
+                var iface = networkInterfaces[devName];
+
+                for (var i = 0; i < iface.length; i++) {
+                        var alias = iface[i];
+                        if (alias.family === 'IPv4' && alias.address !== '127.0.0.1' && !alias.internal)
+                                return alias.address;
+                }
+        }
+
+        return '0.0.0.0';
+}
 
 // EOF 
