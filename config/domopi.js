@@ -241,6 +241,24 @@ exports.setAutomationRules = function(rules) {
 // Load the Rules at the start :
 exports.setAutomationRules(exports.getAutomationRules());
 
+// Get the User Profile
+exports.getUserProfile = function() {
+	logger.debug('getUserProfile');
+	var conf = exports.getDomopiConf();
+	if ('user' in conf) {
+		return conf['user'];
+	}
+	return {}
+}
+
+// Set the User Profile
+exports.setUserProfile = function(user) {
+	logger.debug('setUserProfile');
+	var conf = exports.getDomopiConf();
+	conf['user'] = user;
+	exports.setDomopiConf(conf);
+}
+
 // Get the local IP
 exports.getMyLocalIP = function() {
         var networkInterfaces = os.networkInterfaces( );

@@ -139,6 +139,7 @@ function handleCommand(resp)
 				else {
 				}
 			});
+			continue;
 		}
 		if (cmd.cmd == 'rules_def') {
 			if (!parms.rules) {
@@ -146,6 +147,16 @@ function handleCommand(resp)
 				continue;
 			}
 			domopi.setAutomationRules(JSON.parse(parms.rules));
+			continue;
+		}
+		if (cmd.cmd == 'user_def') {
+			if (!parms.user) {
+				logger.error('Missing user def with handleCommand:' + cmd);
+				continue;
+			}
+			//domopi.setUserProfile(JSON.parse(parms.user));
+			domopi.setUserProfile(parms.user);
+			continue;
 		}
 	}
 }
