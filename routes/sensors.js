@@ -62,7 +62,7 @@ router.get('/command/:devid/:instid/:sid/:command', function(req, res, next) {
 		res.json({ status: 'error', msg: 'Sensor not found' });
 		return;
 	}
-	sens.setCommand(cmd, function(body) {
+	sens.sendCommand(cmd, function(body) {
 		if (!body) {
 			res.json({ status: 'error' });
 			return;
