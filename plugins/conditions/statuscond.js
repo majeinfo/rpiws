@@ -15,7 +15,7 @@ module.exports.doCondition = function(cond) {
 
 	logger.debug('Check Status Condition');
 
-        var sens = new sensor.findSensor(cond.devid, cond.instid, cond.sid);
+        var sens = sensor.findSensor(cond.devid, cond.instid, cond.sid);
         if (!sens) {
                 logger.info('statuscond.doCondition: sensor not found');
                 return false;
