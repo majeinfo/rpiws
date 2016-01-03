@@ -79,6 +79,7 @@ function updateSensors(devid, instid, sid, data) {
 		mySensors.push(sens);
 	}
 	sens.data = data;
+	return sens;
 }
 
 module.exports.getSensors = function() { return mySensors; }

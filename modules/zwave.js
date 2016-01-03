@@ -247,6 +247,18 @@ function _filterData(body)
         return filtered;
 }
 
+module.exports.startInclusion = function(next) {
+        mkget('/ZWaveAPI/Run/controller.AddNodeToNetwork(1)', function(body) {
+        	if (next) next(body);
+	});
+}
+
+module.exports.stopInclusion = function(next) {
+        mkget('/ZWaveAPI/Run/controller.AddNodeToNetwork(0)', function(body) {
+        	if (next) next(body);
+	});
+}
+
 module.exports.getFullDeviceList = function(next) {
         mkget('/ZAutomation/api/v1/devices', function(body) {
         //mkget('/ZWaveAPI/Data/0', function(body) {    /// returns different and much more values
