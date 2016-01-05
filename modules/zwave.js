@@ -226,7 +226,8 @@ function _filterData(body)
 		var parts = fulldev.split('-');
 		var devid = parts[0];
 		var instid = parts[1]; if (instid === undefined) continue;
-		var sid = parts.slice(2).join('-'); if (sid === undefined) continue;
+		// Test on sid == "0" eliminates disassociated devices with a single buttonControl and nothing else
+		var sid = parts.slice(2).join('-'); if (sid === undefined || sid == "0") continue;
 		logger.debug(devid, instid, sid);
 
 		var cfg = domopi.getSensorConf(devid, instid, sid);
@@ -255,6 +256,18 @@ module.exports.startInclusion = function(next) {
 
 module.exports.stopInclusion = function(next) {
         mkget('/ZWaveAPI/Run/controller.AddNodeToNetwork(0)', function(body) {
+        	if (next) next(body);
+	});
+}
+
+module.exports.startExclusion = function(next) {
+        mkget('/ZWaveAPI/Run/controller.RemoveNodeFromNetwork(1)', function(body) {
+        	if (next) next(body);
+	});
+}
+
+module.exports.stopExclusion = function(next) {
+        mkget('/ZWaveAPI/Run/controller.RemoveNodeFromNetwork(0)', function(body) {
         	if (next) next(body);
 	});
 }

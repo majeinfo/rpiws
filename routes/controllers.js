@@ -34,6 +34,7 @@ router.get('/attach', function(req, res, next) {
 var _lastPollTime = 0;
 var _inclusionTimer = null;
 var _foundDevices = [];
+var _oldDevices = [];
 
 function _checkForNewDevice(data) {
         logger.debug('_checkForNewDevice');
@@ -48,9 +49,31 @@ function _checkForNewDevice(data) {
         }
 }
 
-function _getDeltaDeviceList()
+function _checkForOldDevice(data) {
+        logger.debug('_checkForOldDevice');
+        if (!data) return;   
+	// Loopon known Sensor to check for disassociated ones
+	var sensors = sensor.getSensors();
+	for (var s in sensors) {
+		var sens = sensors[s];
+		var found = false;
+        	for (var i in data) {
+			if (sens.devid == data[i].devid) {
+				found = true;
+				break;
+			}
+		}
+		// TODO: Sensors are not really destroyed
+		if (!found) {
+			logger.info('Old Device detected : ' + sens.devid + ' ' + sens.instid + ' ' + sens.sid);
+			_foundDevices.push(sens);
+		}
+	}
+}
+
+function _getDeltaDeviceList(next)
 {
-        zwave.getDeltaDeviceList(_lastPollTime.toString(), _checkForNewDevice);
+        zwave.getDeltaDeviceList(_lastPollTime.toString(), next);
         _lastPollTime = Math.floor(Date.now() / 1000);
 }
 
@@ -66,7 +89,7 @@ router.get('/discovery/:cmd', function(req, res, next) {
 		_foundDevices = [];
 		zwave.startInclusion(function(body) {
 			res.json({ status: 'ok', data: body});
-			_inclusionTimer = setInterval(_getDeltaDeviceList, 1500);	// every 1.5s call
+			_inclusionTimer = setInterval(function() { _getDeltaDeviceList(_checkForNewDevice) }, 1500);	// every 1.5s call
 		});
 		return;
 	}
@@ -86,6 +109,64 @@ router.get('/discovery/:cmd', function(req, res, next) {
 	if (req.params.cmd == 'getnew') {
 		// Must return new found devices, with their capabilities
 		res.json({ status: 'ok', data: _foundDevices });
+		return;
+	}
+
+	res.json({ status: 'error', message: 'invalid parameter' });
+});
+
+/**
+ * Start Device Exclusion
+ *
+ * JSON returned by /ZWaveAPI/Data includes :
+ * "controller.data.controllerState": {
+ *     "value": 0,
+ *     "type": "int",
+ *     "invalidateTime": 1452017844,
+ *     "updateTime": 1452020351
+ * },
+ * "controller.data.lastExcludedDevice": {
+ *     "value": 8,
+ *     "type": "int",
+ *     "invalidateTime": 1452017844,
+ *     "updateTime": 1452020351
+ * }
+ */
+var _exclusionTimer = null;
+
+router.get('/exclusion/:cmd', function(req, res, next) {
+	if (req.params.cmd == 'start') {
+		// Only one at a time
+		if (_exclusionTimer) { 
+			res.json({ status: 'ok', message: 'already in progress' }); 
+			return; 
+		}
+		_lastPollTime = 0;
+		_exclusionTimer = null;
+		_oldDevices = [];
+		zwave.startExclusion(function(body) {
+			res.json({ status: 'ok', data: body});
+			//_exclusionTimer = setInterval(function() { _getDeltaDeviceList(_checkForOldDevice) }, 1500);	// every 1.5s call
+		});
+		return;
+	}
+	if (req.params.cmd == 'stop') {
+		if (!_exclusionTimer) {
+			res.json({ status: 'ok', message: 'no exclusion in progress !' });
+			return;
+		}
+		if (_exclusionTimer) clearInterval(_exclusionTimer);
+		_exclusionTimer = null;
+
+		zwave.stopExclusion(function(body) {
+			zwave.getFullDeviceList(_checkForOldDevice);
+			res.json({ status: 'ok', data: body});
+		});
+		return;
+	}
+	if (req.params.cmd == 'getold') {
+		// Must return new found devices, with their capabilities
+		res.json({ status: 'ok', data: _oldDevices });
 		return;
 	}
 
