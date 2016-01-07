@@ -5,9 +5,6 @@
 //
 // TODO: how to distinguish free versus paying Customers ?
 // TODO: node-cron can be used ?
-// TODO: each time a rule is triggered, should memorize
-//       it and sends last history event to whoever wants it
-// TODO: should send back to the web server the last logs
 // -----------------------------------------------------------
 //
 var config = require('../config/local'),

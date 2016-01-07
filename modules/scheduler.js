@@ -41,10 +41,11 @@ for (var plug in _plugFiles) {
 // RULE format:
 // { description: 'xxxxx', conditions: [ ], actions: [ ] }
 // CONDITION format: (default AND)
-// { condtype: 'timecond'|'statuscond'|'thresholdcond'|'ruleconf', ... }
+// { condtype: 'timecond'|'statuscond'|'thresholdcond'|'ruleconf'|'suntimecond', ... }
 // 	if condtype == 'thresholdcond', devid:, instid:, sid:, value:, testtype: '>|<|>=|<=|==|!=' 
 // 	if condtype == 'statuscond', devid:, instid:, sid:, value:'on|off', testtype: '==|!=' 
 // 	if condtype == 'timecond', starttime: 'hh:mm', endtime: 'hh:mm', days: '01234567' 
+// 	if condtype == 'suntimecond', when: 'sunrise'|'sunset', delta: 'minutes', offset: '+|-', random: '0|1'
 // ACTION format: (default AND)
 // { actiontype: 'sensorcmd'|'customcmd', ... }
 // 	if actiontype == sensorcmd, devid:, instid:, sid:, value:'on|off' 
