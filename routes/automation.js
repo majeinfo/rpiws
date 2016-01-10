@@ -70,44 +70,18 @@ router.get('/rules', function(req, res, next) {
 });
 
 /**
- * GET a full Actions listing 
+ * POST a full listing of Autmation RULES
  */
-router.get('/actions', function(req, res, next) {
-	var cfg = domopi.getDomopiConf();	// TODO: get ACTIONS
-	var actions = ('actions' in cfg) ? cfg.actions: {};
-	res.json({ status: 'ok', actions: actions });
-});
+router.post('/setrules', function(req, res, next) {
+        if (!req.body.rules) {
+                logger.error('/setrules: missing Rules');
+                res.json({ status: 'ok', msg: 'missing rules' });
+                return;
+        }
+	domopi.setAutomationRules(req.body.user);
+        res.json({ status: 'ok' });
 
-/**
- * POST a new ACTION
- */
-router.post('', function(req, res, next) {
-	logger.debug(req.body);
-	res.json({ status: 'ok' });
 });
-
-/**
- * PUT an Action Description
- */
-/*
-router.put('/setdescr/:devid/:instid/:sid', function(req, res, next) {
-	var devid = req.params.devid;
-	var instid = req.params.instid;
-	var sid = req.params.sid;
-	var id = _buildZWaveDeviceName(devid, instid, sid);
-	if (!req.body.title) {
-		logger.error('setdescr: missing title');
-		res.json({ status: 'ok' });
-		return;
-	}
-
-	var cfg = domopi.getDomopiConf();
-	if (!(id in cfg)) cfg[id] = {};
-	cfg[id].title = req.body.title;
-	domopi.setDomopiConf(cfg);
-	res.json({ status: 'ok' });
-});
-*/
 
 module.exports = router;
 

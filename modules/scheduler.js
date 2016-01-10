@@ -66,6 +66,16 @@ function _ruleSatisfied(rule) {
 			return false;
 		}
 
+		// Check if Sensor disappear
+		if ('devid' in cond) {
+        		var sens = sensor.findSensor(cond.devid, cond.instid, cond.sid);
+			if (!sens) {
+				logger.error('Rule is set invalid because Sensor does not exists in Condition: ' + rule.description);
+				rule.setInvalid();
+				continue;
+			}
+		}
+
                 // Must find a Plugin with matching name:
                 logger.debug('Test Condition: ' + cond.condtype + ' for rule ' + rule.description);
                 var found = false;
@@ -114,6 +124,16 @@ function _doActions(rule) {
 			return; 
 		}
 
+		// Check if Sensor disappear
+		if ('devid' in action) {
+        		var sens = sensor.findSensor(action.devid, action.instid, action.sid);
+			if (!sens) {
+				logger.error('Rule is set invalid because Sensor does not exists in Action: ' + rule.description);
+				rule.setInvalid();
+				continue;
+			}
+		}
+
 		// Must find a Plugin with matching name:
                 logger.debug('Execute action: ' + action.actiontype + ' for rule ' + rule.description);
 		var found = false;
@@ -152,6 +172,7 @@ function _checkRules() {
 	for (var i in autorules) {
 		var rule = autorules[i];
 		logger.debug('Check Rule: ' + rule.description);
+		if (!rule.isValid()) continue;
 		if (_ruleSatisfied(rule)) {
 			if (!rule.isTriggered()) {
 				_doActions(rule);

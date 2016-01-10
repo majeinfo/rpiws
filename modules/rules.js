@@ -14,6 +14,7 @@ var Rule = function(json_rule, is_implicit) {
 	this.actions = json_rule.actions;
 	this._triggered = false;
 	this._implicit = (is_implicit === true);
+	this._valid = true;
 }
 
 // Return Rule Trigger
@@ -27,6 +28,16 @@ Rule.prototype.setTrigger = function() {
 }
 Rule.prototype.unsetTrigger = function() {
 	this._triggered = false;
+}
+
+// Mark a Rule as invalid (in case of Sensor Exclusion)
+// The Rule may be valid again when they will be added again
+Rule.prototype.isValid = function() {
+	return this._valid;
+}
+
+Rule.prototype.setInvalid = function() {
+	this._valid = false;
 }
 
 // Flush all Rules
