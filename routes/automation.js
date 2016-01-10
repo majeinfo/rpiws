@@ -78,9 +78,8 @@ router.post('/setrules', function(req, res, next) {
                 res.json({ status: 'ok', msg: 'missing rules' });
                 return;
         }
-	domopi.setAutomationRules(req.body.user);
+	domopi.setAutomationRules(req.body.rules);
         res.json({ status: 'ok' });
-
 });
 
 module.exports = router;
