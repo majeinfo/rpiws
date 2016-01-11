@@ -49,8 +49,15 @@ Sensor.prototype.sendCommand = function(cmd, next) {
 Sensor.prototype.setDescription = function(newdesc, next) {
         var cfg = domopi.getSensorConf(this.devid, this.instid, this.sid);
         cfg.title = newdesc;
+	this.title = newdesc;
         domopi.setSensorConf(this.devid, this.instid, this.sid, cfg);
 	if (next) next();
+}
+
+// Get the Sensor Description (tile or internal name)
+Sensor.prototype.getDescription = function(next) {
+	if (this.title) return this.title;
+	return this.getSimpleName();
 }
 
 // Set the Sensor Type

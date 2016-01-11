@@ -11,11 +11,18 @@ var zid = domopi.getZid();
 var key = domopi.getDomopiKey();
 
 // Send an email notification demand to remote web
-function _sendEmailNotification(email, subject, content) {
+function _sendEmailNotification(email, subject, content, rule) {
 	logger.debug('_sendEmailNotification');
 
-	// TODO: subject and content may contain macros
-	// newstring = string.replace(/re/g, value)
+	// There must be at least one condition which can be used to
+	// make Macro substitution
+	if (rule.conditions.length > 0) {
+		var sens = sensor.findSensor(rule.condition[0]['devid'], rule.condition[0]['instid'], rule.condition[0]['sid']);
+		if (sens) {
+			content = content.replace(/{SENSOR:NAME}/ig, sens.getDescription())
+			content = content.replace(/{SENSOR:METRIC_VALUE}/ig, sens.getCurrentMetric())
+		}
+	}
 	
 	// Add a link to the remote web server at the end of the mail
 	content += '\n\nhttp://adress_of_domopi_server/login';
@@ -32,7 +39,7 @@ function _sendEmailNotification(email, subject, content) {
 var _expectedParms = [ 'email', 'subject' ];
 module.exports.expectedParms = _expectedParms;
 
-module.exports.doAction = function(action) {
+module.exports.doAction = function(action, rule) {
 	logger.debug('should send an email to: ' + action.email + ' with subject: ' + action.subject);
 	_sendEmailNotification(action.email, action.subject, action.content);
 	return true;

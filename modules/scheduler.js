@@ -152,7 +152,7 @@ function _doActions(rule) {
 					}
 				}
 				if (parm_ok) {
-					var res = _actionPlugins[p].doAction(action);
+					var res = _actionPlugins[p].doAction(action, rule);
 				}
 				break;
 			}
