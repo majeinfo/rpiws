@@ -17,7 +17,7 @@ function _sendEmailNotification(email, subject, content, rule) {
 	// There must be at least one condition which can be used to
 	// make Macro substitution
 	if (rule.conditions.length > 0) {
-		var sens = sensor.findSensor(rule.condition[0]['devid'], rule.condition[0]['instid'], rule.condition[0]['sid']);
+		var sens = sensor.findSensor(rule.conditions[0]['devid'], rule.conditions[0]['instid'], rule.conditions[0]['sid']);
 		if (sens) {
 			content = content.replace(/{SENSOR:NAME}/ig, sens.getDescription())
 			content = content.replace(/{SENSOR:METRIC_VALUE}/ig, sens.getCurrentMetric())
@@ -41,7 +41,7 @@ module.exports.expectedParms = _expectedParms;
 
 module.exports.doAction = function(action, rule) {
 	logger.debug('should send an email to: ' + action.email + ' with subject: ' + action.subject);
-	_sendEmailNotification(action.email, action.subject, action.content);
+	_sendEmailNotification(action.email, action.subject, action.content, rule);
 	return true;
 };
 
