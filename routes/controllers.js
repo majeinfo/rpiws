@@ -178,7 +178,7 @@ router.get('/exclusion/:cmd', function(req, res, next) {
  */
 router.get('/logs', function(req, res, next) {
 	var cbuf = logger.circularBuffer.toarray();
-	res.json({ status: 'ok' });
+	res.json({ status: 'ok', logs: cbuf });
 });
 
 /**
