@@ -4,6 +4,7 @@
 //
 var fs = require('fs'),
     os = require('os'),
+    gmap = require('googlemaps'),
     m_rules = require('../modules/rules'),
     sensors = require('../modules/sensor'),
     logger = require('../modules/logger');
@@ -255,8 +256,32 @@ exports.getUserProfile = function() {
 exports.setUserProfile = function(user) {
 	logger.debug('setUserProfile');
 	var conf = exports.getDomopiConf();
-	conf['user'] = user;
-	exports.setDomopiConf(conf);
+
+	// If address changed or new or if no lat/lon : ask for one
+	if (user['address'] && 
+	    (('address' in conf['user']) && user['address'] != conf['user']['address']) || (!('lat' in conf['user']))) {
+		var cfg = {
+			// TODO: should be externalized
+			key: 'AIzaSyCoN8ZvMP77YDDnpVTWgCOxvgHvsaxBjh4'
+		};
+		var geoParams = {
+			'address': user['address']
+		};
+		var gmAPI = new gmap(cfg);
+		gmAPI.geocode(geoParams, function(err, result){
+			logger.debug('geocode:', result);
+			if (!err && results in result && result['results'].length > 0) {
+				user['lat'] = result['results'][0]['geometry']['location']['lat'];
+				user['lng'] = result['results'][0]['geometry']['location']['lng'];
+			}
+			conf['user'] = user;
+			exports.setDomopiConf(conf);
+		});
+	}
+	else {
+		conf['user'] = user;
+		exports.setDomopiConf(conf);
+	}
 }
 
 // Get the local IP
