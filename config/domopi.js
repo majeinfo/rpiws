@@ -259,7 +259,7 @@ exports.setUserProfile = function(user) {
 
 	// If address changed or new or if no lat/lon : ask for one
 	if (user['address'] && 
-	    (('address' in conf['user']) && user['address'] != conf['user']['address']) || (!('lat' in conf['user']))) {
+	    (!('user' in conf) || ('address' in conf['user']) && user['address'] != conf['user']['address']) || (!('lat' in conf['user']))) {
 		var cfg = {
 			// TODO: should be externalized
 			key: 'AIzaSyCoN8ZvMP77YDDnpVTWgCOxvgHvsaxBjh4'
