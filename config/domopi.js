@@ -268,8 +268,10 @@ exports.setUserProfile = function(user) {
 			'address': user['address']
 		};
 		var gmAPI = new gmap(cfg);
+		logger.debug('call gmAPI.geocode');
 		gmAPI.geocode(geoParams, function(err, result){
 			logger.debug('geocode:', result);
+			logger.debug('err:', err);
 			if (!err && results in result && result['results'].length > 0) {
 				user['lat'] = result['results'][0]['geometry']['location']['lat'];
 				user['lng'] = result['results'][0]['geometry']['location']['lng'];
