@@ -86,9 +86,9 @@ function _ruleSatisfied(rule) {
                                 // Check parms and launch action
                                 var parm_ok = true;
                                 for (var parm in _conditionPlugins[p].expectedParms) {
-                                        if (!cond[_conditionPlugins[p].expectedParms[parm]]) {
+                                        if (!(_conditionPlugins[p].expectedParms[parm] in cond)) {
                                                 logger.error('Rule ' + rule.description +
-                                                                ' missing "' + cond[_conditionPlugins[p].expectedParms[parm]] +
+                                                                ' missing "' + _conditionPlugins[p].expectedParms[parm] +
                                                                 '" parameter for Condition ' + cond.condtype);
                                                 parm_ok = false;
                                         }
@@ -144,9 +144,9 @@ function _doActions(rule) {
 				// Check parms and launch action
 				var parm_ok = true;
 				for (var parm in _actionPlugins[p].expectedParms) {
-					if (!action[_actionPlugins[p].expectedParms[parm]]) {
+					if (!(_actionPlugins[p].expectedParms[parm] in action)) {
 						logger.error('Rule ' + rule.description +
-								' missing "' + action[_actionPlugins[p].expectedParms[parm]] + 
+								' missing "' + _actionPlugins[p].expectedParms[parm] + 
 								'" parameter for Action ' + action.actiontype);
 						parm_ok = false;
 					}

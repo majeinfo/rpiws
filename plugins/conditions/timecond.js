@@ -20,7 +20,7 @@ module.exports.doCondition = function(cond) {
 	    parts;
 
 	// Check the day of the week
-	if ('days' in cond.days && cond.days != '') {
+	if ('days' in cond && cond.days != '') {
 		var curday = curdate.getDay();
 		if (cond.days.indexOf(curday.toString()) == -1) return false;
 	}
