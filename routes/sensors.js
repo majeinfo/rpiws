@@ -75,9 +75,9 @@ router.get('/command/:devid/:instid/:sid/:command', function(req, res, next) {
 });
 
 /**
- * PUT a Sensor Description
+ * POST a Sensor Description
  */
-router.put('/setdescr/:devid/:instid/:sid', function(req, res, next) {
+router.post('/setdescr/:devid/:instid/:sid', function(req, res, next) {
 	var devid = req.params.devid,
 	    instid = req.params.instid,
 	    sid = req.params.sid;
