@@ -17,6 +17,14 @@ var zidFile = '/etc/zbw/userid',
     _zid = undefined,
     _key = undefined;
 
+// Useful for testing purpose
+exports.setConfFile = function(conffile) {
+	confFile = conffile;
+}
+exports.clearCache = function() {
+	confCache = undefined;
+}
+
 // Read Domopi Version
 exports.getDomopiVersion = function() {
 	var version = '0';

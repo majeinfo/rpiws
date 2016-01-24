@@ -87,7 +87,7 @@ router.put('/setdescr/:devid/:instid/:sid', function(req, res, next) {
 		return;
 	}
 
- 	// NO!!! Too dangerous: we cannot write a Sensor partially, al its chars must be written
+ 	// NO!!! Too dangerous: we cannot write a Sensor partially, all its chars must be written
  	/*
 	var data = { id: id, title: req.body.title };
 	zwave.mkput('/ZAutomation/api/v1/devices/' + id, JSON.stringify(data), function(body) {
@@ -108,6 +108,25 @@ router.put('/setdescr/:devid/:instid/:sid', function(req, res, next) {
 		return;
 	}
 	sens.setDescription(req.body.title, function() {
+		res.json({ status: 'ok' });
+	});
+});
+
+/**
+ * Set a Sensor Visibility
+ */
+router.post('/setvisibility/:devid/:instid/:sid/:vis', function(req, res, next) {
+	var devid = req.params.devid,
+	    instid = req.params.instid,
+	    sid = req.params.sid,
+	    vis = req.params.vis;
+	var sens = sensor.findSensor(devid, instid, sid);
+	if (!sens) {
+		logger.error('/setvisibility received bad values:' + devid + ' ' + instid + ' ' + sid);
+		res.json({ status: 'error', msg: 'Sensor not found' });
+		return;
+	}
+	sens.setHidden(vis, function() {
 		res.json({ status: 'ok' });
 	});
 });

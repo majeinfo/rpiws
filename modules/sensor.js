@@ -68,6 +68,15 @@ Sensor.prototype.setType = function(stype, next) {
 	if (next) next();
 }
 
+// Unhide or Unhide a Sensor
+Sensor.prototype.setHidden = function(hidden, next) {
+	var cfg = domopi.getSensorConf(this.devid, this.instid, this.sid);
+        cfg.is_hidden = hidden;
+        this.is_hidden = hidden;
+        domopi.setSensorConf(this.devid, this.instid, this.sid, cfg);
+        if (next) next();
+}
+
 // Find a sensor in the bag
 function findSensor(devid, instid, sid) {
 	for (var i in mySensors) {

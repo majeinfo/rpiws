@@ -204,7 +204,7 @@ function _filterData(body)
         var devdata = obj.data.devices;
 
         // DEBUG Dump
-        logger.debug(body);
+        //logger.debug(body);
         logger.debug(obj.data);
         for (i in devdata) {
                 logger.debug(devdata[i].deviceType);
@@ -234,6 +234,9 @@ function _filterData(body)
 		//Attribute overloading
 		if ('title' in cfg) {
 			metrics['title'] = cfg.title;
+		}
+		if ('is_hidden' in cfg) {
+			metrics['is_hidden'] = cfg.is_hidden;
 		}
 
 		var doc = { devid: devid, instid: instid, sid: sid, deviceType: devdata[i].deviceType, metrics: metrics };
