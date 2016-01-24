@@ -63,4 +63,8 @@ setInterval(getSunTime, 60*60*1000);	// Every hour
 exports.getSunRise = function() { return nextSunRise; }
 exports.getSunSet = function() { return nextSunSet; }
 
+// To make test easier
+exports.setSunRise = function(t) { nextSunRise = t; }
+exports.setSunSet = function(t) { nextSunSet = t; }
+
 // EOF 

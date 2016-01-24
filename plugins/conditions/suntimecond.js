@@ -34,6 +34,10 @@ module.exports.doCondition = function(cond) {
 		logger.error('Suntime evt unknown: ' + cond.sunevt);
 		return false;
 	}
+	if (!condtime) {
+		logger.info('Suntime has not been determined yet !');
+		return false;
+	}
 
 	// Convert the condtime into minutes and same conversion for curdate 
 	var curmin = curdate.getUTCHours() * 60 + curdate.getUTCMinutes();
@@ -45,6 +49,7 @@ module.exports.doCondition = function(cond) {
 			else if (cond.sunoffset == 'after') sunmin += cond.sundelay;
 			else logger.error('Suntime offset unknown: ' + cond.sunoffset);
 		}
+		logger.debug('sunmin=', sunmin, ' curmin=', curmin);
 		if (Math.abs(sunmin - curmin) < 2) {
 			logger.debug('Suntime Condition match !');
 			return true;
