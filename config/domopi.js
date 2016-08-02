@@ -99,7 +99,7 @@ exports.getDomopiConf = function() {
 
 // Write new Domopi Configuration (JSON Format)
 exports.setDomopiConf = function(conf) {
-	logger.debug('setDomopiConfig');
+	logger.debug('setDomopiConf');
 	try {
 		var json = JSON.stringify(conf);
 		confCache = conf;
@@ -148,8 +148,15 @@ function _setGlobalDefaultParms2(cfg, defaultCfg) {
 }
 function _setGlobalDefaultParms(cfg) {
 	if (!('email' in cfg) || !cfg.email) {
-		logger.info('No default email address defined !');
-		cfg.email = '';
+		// Second chance: take user email
+		var user = exports.getUserProfile();
+		if ('email' in user) {
+			cfg.email = user['email'];
+		}
+		else {
+			logger.info('No default email address defined !');
+			cfg.email = '';
+		}
 	}
 	_setGlobalDefaultParms2(cfg, _defaultGlob);
 	return cfg;
@@ -165,7 +172,7 @@ exports.getGlobalConf = function() {
 }
 
 // Save the Global Parameters
-exportssetGlobalConf = function(cfg) {
+exports.setGlobalConf = function(cfg) {
 	var conf = exports.getDomopiConf();
 	conf['global'] = cfg;
 	exports.setDomopiConf(conf);
@@ -247,9 +254,6 @@ exports.setAutomationRules = function(rules) {
 	}
 }
 
-// Load the Rules at the start :
-exports.setAutomationRules(exports.getAutomationRules());
-
 // Get the User Profile
 exports.getUserProfile = function() {
 	logger.debug('getUserProfile');
@@ -309,5 +313,8 @@ exports.getMyLocalIP = function() {
 
         return '0.0.0.0';
 }
+
+// Load the Rules at the start :
+exports.setAutomationRules(exports.getAutomationRules());
 
 // EOF 

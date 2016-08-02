@@ -9,6 +9,7 @@ var express = require('express'),
     zwave = require('../modules/zwave'),
     sensor = require('../modules/sensor'),
     logger = require('../modules/logger'),
+    security = require('../modules/security'),
     controller = require('../modules/controller'),
     router = express.Router();
 

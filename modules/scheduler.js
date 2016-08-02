@@ -164,6 +164,58 @@ function _doActions(rule) {
 	}
 }
 
+// UnLaunch Actions
+function _undoActions(rule) {
+	if (!('actions' in rule)) return false;
+	if (!('description' in rule)) return false;
+
+	for (var i in rule.actions) {
+		var action = rule.actions[i];
+		if (!('actiontype' in action)) {
+			logger.error('Action is missing an actiontype:' + rule.description);
+			return; 
+		}
+
+		// Check if Sensor disappear
+		if ('devid' in action) {
+        		var sens = sensor.findSensor(action.devid, action.instid, action.sid);
+			if (!sens) {
+				logger.error('Rule is set invalid because Sensor does not exists in Action: ' + rule.description);
+				rule.setInvalid();
+				continue;
+			}
+		}
+
+		// Must find a Plugin with matching name:
+                logger.debug('Execute action: ' + action.actiontype + ' for rule ' + rule.description);
+		var found = false;
+		for (var p in _actionPlugins) {
+			if (p == action.actiontype) {
+				found = true;
+
+				// Check parms and launch action
+				var parm_ok = true;
+				for (var parm in _actionPlugins[p].expectedParms) {
+					if (!(_actionPlugins[p].expectedParms[parm] in action)) {
+						logger.error('Rule ' + rule.description +
+								' missing "' + _actionPlugins[p].expectedParms[parm] + 
+								'" parameter for Action ' + action.actiontype);
+						parm_ok = false;
+					}
+				}
+				if (parm_ok) {
+					var res = _actionPlugins[p].undoAction(action, rule);
+				}
+				break;
+			}
+		}
+                if (!found) {
+                        logger.error('Rule ' + rule.description + ' has an unknown Action Type: ' + action.actiontype);
+                        continue;
+                }
+	}
+}
+
 // Check the Automation Rules
 function _checkRules() {
 	var autorules = rules.getRules();
@@ -174,7 +226,9 @@ function _checkRules() {
 		logger.debug('Check Rule: ' + rule.description);
 		if (!rule.isValid()) continue;
 		if (_ruleSatisfied(rule)) {
+			// The Rule must be played if not already triggered
 			if (!rule.isTriggered()) {
+				logger.debug('Rule satisfied !');
 				_doActions(rule);
 				rule.setTrigger();
 			}
@@ -183,7 +237,15 @@ function _checkRules() {
 			}
 		}
 		else {
-			rule.unsetTrigger();
+			// The Rule must be "unplayed" if already triggered
+			if (rule.isTriggered()) {
+				logger.debug('Rule unsatisfied !');
+				_undoActions(rule);
+				rule.unsetTrigger();
+			}
+			else {
+				logger.debug('Rule not satisfied but already untriggered !');
+			}
 		}
 	}
 }

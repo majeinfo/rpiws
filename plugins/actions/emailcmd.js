@@ -25,6 +25,7 @@ function _sendEmailNotification(email, subject, content, rule) {
 	}
 	
 	// Add a link to the remote web server at the end of the mail
+	// TODO: fix server address
 	content += '\n\nhttp://adress_of_domopi_server/login';
 	
 	var body = { email: email, subject: subject, body: content };
@@ -42,6 +43,12 @@ module.exports.expectedParms = _expectedParms;
 module.exports.doAction = function(action, rule) {
 	logger.debug('should send an email to: ' + action.email + ' with subject: ' + action.subject);
 	_sendEmailNotification(action.email, action.subject, action.content, rule);
+	return true;
+};
+
+module.exports.undoAction = function(action, rule) {
+	logger.debug('should send an email to: ' + action.email + ' with subject: (END) ' + action.subject);
+	_sendEmailNotification(action.email, action.subject + ' (END)', action.content, rule);
 	return true;
 };
 

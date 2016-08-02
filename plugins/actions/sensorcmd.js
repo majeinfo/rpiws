@@ -17,11 +17,30 @@ module.exports.doAction = function(action) {
 		logger.info('sensor not found in sensorcmd doAction');
 		return false;
 	}
-	//
+
 	// Send the command (do we need to check if the status is already good ?)
-	sens.sendCommand(action.value, function(body) {
+	sens.sendCommand(action.value.toLowerCase(), function(body) {
 		if (!body) {
 			logger.error('sensorcmd.doAction failed to send command "' + action.value + '" at Sensor ' + sens.getSimpleName());
+		}
+	});
+	return true;
+};
+
+module.exports.undoAction = function(action) {
+	logger.debug('should send a Command to Sensor: ' + action.devid + action.instid + action.sid);
+	var sens = new sensor.findSensor(action.devid, action.instid, action.sid);
+	if (!sens) {	// TODO: could be made at the upper level
+		logger.info('sensor not found in sensorcmd doAction');
+		return false;
+	}
+	
+	// Send the command (do we need to check if the status is already good ?)
+	var act = action.value.toLowerCase();
+	if (act == 'on') { act = 'off'; } else { act = 'on'; }
+	sens.sendCommand(act, function(body) {
+		if (!body) {
+			logger.error('sensorcmd.doAction failed to send command "' + act + '" at Sensor ' + sens.getSimpleName());
 		}
 	});
 	return true;

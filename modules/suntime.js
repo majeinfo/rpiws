@@ -57,6 +57,7 @@ function getSunTime() {
 }
 
 // Check for sunset & sunrise time at least once a day
+getSunTime();
 setInterval(getSunTime, 60*60*1000);	// Every hour
 //setInterval(getSunTime, 10 * 1000);	// Every ten seconds
 
