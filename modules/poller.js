@@ -24,6 +24,7 @@ var doversion = domopi.getDomopiVersion();
 var fullDeviceListSent = false;
 var lastPollTime = 0;
 var lastConfMTime = 0;
+var lastNotificationTime = 0;
 var localIP = domopi.getMyLocalIP();
 logger.info('My local IP Address is ' + localIP);
 
@@ -86,6 +87,11 @@ function handleCommand(resp)
 		// ('parms' value is a JSON string)
 		// cmd = { 'key': 'xxxx', 'zid': 'xxxx', 'cmd': 'on|off', 'parms': "{ 'devid': 'xxx', 'instid': 'xxx', 'sid': 'xxxxx' }" }
 		// cmd = { 'key': 'xxxx', 'zid': 'xxxx', 'cmd': 'sensor_setdescr', 'parms': "{ 'devid': 'xxx', 'instid': 'xxx', 'sid': 'xxxxx', 'value': 'blabla' }" }
+		// cmd = { 'key': 'xxxx', 'zid': 'xxxx', 'cmd': 'device_hide', 'parms': "{ 'devid': 'xxx'  }" }
+		// cmd = { 'key': 'xxxx', 'zid': 'xxxx', 'cmd': 'device_unhide', 'parms': "{ 'devid': 'xxx'  }" }
+		// cmd = { 'key': 'xxxx', 'zid': 'xxxx', 'cmd': 'sensor_hide', 'parms': "{ 'devid': 'xxx', 'instid': 'xxx', 'sid': 'xxxxx'  }" }
+		// cmd = { 'key': 'xxxx', 'zid': 'xxxx', 'cmd': 'sensor_unhide', 'parms': "{ 'devid': 'xxx', 'instid': 'xxx', 'sid': 'xxxxx'  }" }
+		// cmd = { 'key': 'xxxx', 'zid': 'xxxx', 'cmd': 'sensor_all_unhide', 'parms': "{ 'devid': 'xxx'  }" }
 		// cmd = { 'key': 'xxxx', 'zid': 'xxxx', 'cmd': 'rules_def', 'parms': "{ 'rules': 'json_rules' }" }
 		// cmd = { 'key': 'xxxx', 'zid': 'xxxx', 'cmd': 'controller_setdescr', 'parms': "{ 'value': 'blabla' }" }
 		if (!cmd.cmd || !cmd.parms) {
@@ -112,6 +118,24 @@ function handleCommand(resp)
 			}
 			if ((sens = _getSensorFromCmd(parms)) === false) continue;
 			sens.setDescription(parms.value);
+			continue;
+		}
+		if (cmd.cmd == 'sensor_hide') {
+			if ((sens = _getSensorFromCmd(parms)) === false) continue;
+			sens.setHidden(true);
+			continue;
+		}
+		if (cmd.cmd == 'sensor_unhide') {
+			if ((sens = _getSensorFromCmd(parms)) === false) continue;
+			sens.setHidden(false);
+			continue;
+		}
+		if (cmd.cmd == 'sensor_all_unhide') {
+			if (!('devid' in parms)) continue;
+			sensors = sensor.findSensorsForDevice(parms.devid);
+			for (var i in sensors) {
+				sensors[i].setHidden(false);
+			}
 			continue;
 		}
 		if (cmd.cmd == 'controller_setdescr') {
@@ -185,6 +209,13 @@ function getFullDeviceList(next)
 	lastPollTime = Math.floor(Date.now() / 1000);
 }
 
+function getFullNotificationsList(next)
+{
+	// We do not want ALL the old notifications
+	//zwave.getFullNotificationsList(next);
+	lastNotificationTime = Math.floor(Date.now() / 1000);
+}
+
 /**
  * Send the delta device list to domopi
  * and handles the back-command if needed
@@ -209,6 +240,12 @@ function getDeltaDeviceList(next)
 {
 	zwave.getDeltaDeviceList(lastPollTime.toString(), next);
 	lastPollTime = Math.floor(Date.now() / 1000);
+}
+
+function getDeltaNotificationsList(next)
+{
+	zwave.getDeltaNotificationsList(lastNotificationTime.toString(), next);
+	lastNotificationTime = Math.floor(Date.now() / 1000);
 }
 
 /**
@@ -236,10 +273,14 @@ function saveDomopiConf()
 function poller() 
 {
 	logger.debug('poller');
-	if (fullDeviceListSent)
+	if (fullDeviceListSent) {
 		getDeltaDeviceList(sendDeltaDeviceList);
-	else
+		//getDeltaNotificationsList();
+	}
+	else {
 		getFullDeviceList(sendFullDeviceList);
+		//getFullNotificationsList();
+	}
 
 	// Check if Conf File must be sent
 	var mtime = domopi.getDomopiConfMTime();

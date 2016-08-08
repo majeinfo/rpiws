@@ -25,8 +25,7 @@ function _sendEmailNotification(email, subject, content, rule) {
 	}
 	
 	// Add a link to the remote web server at the end of the mail
-	// TODO: fix server address
-	content += '\n\nhttp://adress_of_domopi_server/login';
+	content += '\n\n' + domopi.login_url;
 	
 	var body = { email: email, subject: subject, body: content };
 	var data = { data: body, status: 'ok', zid: zid, key: key, evttype: 'sendemail', updated: Date.now() };

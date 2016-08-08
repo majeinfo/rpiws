@@ -290,6 +290,19 @@ module.exports.getDeltaDeviceList = function(since, next) {
 	});
 }
 
+module.exports.getFullNotificationsList = function(next) {
+        mkget('/ZAutomation/api/v1/notifications', function(body) {
+		logger.debug('FULL NOTIFICATIONS:', body);
+	});
+}
+        
+module.exports.getDeltaNotificationsList = function(since, next) {
+	logger.debug('call delta notifications');
+        mkget('/ZAutomation/api/v1/notifications?since=' + since, function(body) {
+		logger.debug('DELTA NOTIFICATIONS:', body);
+	});
+}
+
 module.exports.sendCommand = function(devid, instid, sid, cmd, next) {
         var id = _buildZWaveDeviceName(devid, instid, sid);
         // with ZWaveAPI, device ID is number 1,2,3...

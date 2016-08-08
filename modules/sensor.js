@@ -86,6 +86,16 @@ function findSensor(devid, instid, sid) {
 	return false;
 }
 
+// Find all Sensors for a given Device
+function findSensorsForDevice(devid) {
+	var sensors = [];
+	for (var i in mySensors) {
+		var sens = mySensors[i];
+		if (sens.devid == devid) sensors.push(sens);
+	}
+	return sensors;
+}
+
 // Memorize a new sensor or update an old one
 function updateSensors(devid, instid, sid, data) {
 	var sens;
@@ -101,6 +111,7 @@ function updateSensors(devid, instid, sid, data) {
 module.exports.getSensors = function() { return mySensors; }
 module.exports.updateSensors = updateSensors;
 module.exports.findSensor = findSensor;
+module.exports.findSensorsForDevice = findSensorsForDevice;
 module.exports.Sensor = Sensor;
 
 // EOF 

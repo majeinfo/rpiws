@@ -14,4 +14,7 @@ exports.poll_srvPort = 3000;
 exports.poll_externalSrvHost = 'localhost';
 exports.poll_externalSrvPort = 3001;
 
+exports.login_url = 'http://localhost:8000/frontend/auth/login';
+exports.geocode_key = 'AIzaSyCoN8ZvMP77YDDnpVTWgCOxvgHvsaxBjh4';
+
 // EOF

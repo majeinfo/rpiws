@@ -131,7 +131,6 @@ var _defaultGlob = {
 			email_subject: "Battery too low",
 			email_content: "Battery of Sensor {SENSOR:NAME} is too low ({SENSOR:METRIC_VALUE})"
                 			// + sname + ' is too low (' + allsensors[sens].getCurrentMetric() + ')'
-                			// TODO: il faut une fonction d'interpolation
 		}
 	}
 };
@@ -273,8 +272,7 @@ exports.setUserProfile = function(user) {
 	if (user['address'] && 
 	    (!('user' in conf) || ('address' in conf['user']) && user['address'] != conf['user']['address']) || (!('lat' in conf['user']))) {
 		var cfg = {
-			// TODO: should be externalized
-			key: 'AIzaSyCoN8ZvMP77YDDnpVTWgCOxvgHvsaxBjh4'
+			key: conf.geocode_key
 		};
 		var geoParams = {
 			'address': user['address']

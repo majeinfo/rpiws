@@ -70,7 +70,7 @@ router.get('/rules', function(req, res, next) {
 });
 
 /**
- * POST a full listing of Autmation RULES
+ * POST a full listing of Automation RULES
  */
 router.post('/setrules', function(req, res, next) {
         if (!req.body.rules) {
@@ -81,6 +81,19 @@ router.post('/setrules', function(req, res, next) {
 	domopi.setAutomationRules(req.body.rules);
         res.json({ status: 'ok' });
 });
+
+/**
+ * Enable an automation Rule
+ */
+router.post('/enable', function(req, res, next) {
+});
+
+/**
+ * Disable an automation Rule
+ */
+router.post('/disable', function(req, res, next) {
+});
+
 
 module.exports = router;
 

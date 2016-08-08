@@ -12,9 +12,15 @@ var Rule = function(json_rule, is_implicit) {
 	this.description = json_rule.description;
 	this.conditions = json_rule.conditions;
 	this.actions = json_rule.actions;
+	this.is_active = ('is_active' in json_rule) ? json_rule.is_active: true;
 	this._triggered = false;
 	this._implicit = (is_implicit === true);
 	this._valid = true;
+}
+
+// Enable/Disable Rule
+Rule.prototype.isActive = function() {
+	return (!('is_active' in this)) || this.is_active === true;
 }
 
 // Return Rule Trigger

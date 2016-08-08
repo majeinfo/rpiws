@@ -224,7 +224,14 @@ function _checkRules() {
 	for (var i in autorules) {
 		var rule = autorules[i];
 		logger.debug('Check Rule: ' + rule.description);
-		if (!rule.isValid()) continue;
+		if (!rule.isActive()) {
+			logger.debug('rule is not active');
+			continue;
+		}
+		if (!rule.isValid()) {
+			logger.debug('rule is not valid');
+			continue;
+		}
 		if (_ruleSatisfied(rule)) {
 			// The Rule must be played if not already triggered
 			if (!rule.isTriggered()) {
