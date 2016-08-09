@@ -158,6 +158,7 @@ function handleCommand(resp)
 					logger.info('Logs could not be sent');
 				}
 				else {
+					logger.flush();
 				}
 			});
 			continue;

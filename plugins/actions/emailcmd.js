@@ -3,6 +3,7 @@
 // ----------------------------------------------------
 //
 var domopi = require('../../config/domopi'),
+    local = require('../../config/local.js'),
     sensor = require('../../modules/sensor'),
     proxy = require('../../modules/proxy'),
     logger = require('../../modules/logger');
@@ -25,7 +26,7 @@ function _sendEmailNotification(email, subject, content, rule) {
 	}
 	
 	// Add a link to the remote web server at the end of the mail
-	content += '\n\n' + domopi.login_url;
+	content += '\n\n' + local.login_url;
 	
 	var body = { email: email, subject: subject, body: content };
 	var data = { data: body, status: 'ok', zid: zid, key: key, evttype: 'sendemail', updated: Date.now() };

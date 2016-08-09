@@ -5,6 +5,7 @@
 var fs = require('fs'),
     os = require('os'),
     gmap = require('googlemaps'),
+    local = require('../config/local.js'),
     m_rules = require('../modules/rules'),
     sensors = require('../modules/sensor'),
     logger = require('../modules/logger');
@@ -272,7 +273,7 @@ exports.setUserProfile = function(user) {
 	if (user['address'] && 
 	    (!('user' in conf) || ('address' in conf['user']) && user['address'] != conf['user']['address']) || (!('lat' in conf['user']))) {
 		var cfg = {
-			key: conf.geocode_key
+			key: local.geocode_key
 		};
 		var geoParams = {
 			'address': user['address']

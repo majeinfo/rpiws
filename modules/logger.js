@@ -48,6 +48,15 @@ var logger = new winston.Logger({
     exitOnError: false
 });
 
+logger.flush = function() {
+	try {
+		while (true) {
+			circularBuffer.deq();
+		}
+	} catch(e) {
+	}
+};
+
 logger.circularBuffer = circularBuffer;
 module.exports = logger;
 module.exports.stream = {
