@@ -3,6 +3,8 @@
 //
 // TODO: add some security: for example both the zid+key must be provided
 // TODO: write a 'Sensor" class with a load/save method
+// TODO: write a set/getParameter method for Sensor : the title, values 
+//       and description are sensor specific: need external description
 // ------------------------------------------------------------------------
 var express = require('express'),
     zwave = require('../modules/zwave'),
