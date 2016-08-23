@@ -6,7 +6,7 @@ exports.rpiWSSrv = 'localhost';
 exports.rpiWSPort = 8083;
 
 exports.proxy_username = 'admin';
-exports.proxy_password = 'admin';
+exports.proxy_password = 'password';
 
 exports.poll_interval = 10;	// in seconds
 exports.poll_srvHost = 'localhost';

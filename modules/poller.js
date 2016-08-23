@@ -86,6 +86,7 @@ function handleCommand(resp)
 		logger.debug('Command:', cmd);
 		// ('parms' value is a JSON string)
 		// cmd = { 'key': 'xxxx', 'zid': 'xxxx', 'cmd': 'on|off', 'parms': "{ 'devid': 'xxx', 'instid': 'xxx', 'sid': 'xxxxx' }" }
+		// cmd = { 'key': 'xxxx', 'zid': 'xxxx', 'cmd': 'exact', 'parms': "{ 'devid': 'xxx', 'instid': 'xxx', 'sid': 'xxxxx', 'level': 'xxxxx' }" }
 		// cmd = { 'key': 'xxxx', 'zid': 'xxxx', 'cmd': 'sensor_setdescr', 'parms': "{ 'devid': 'xxx', 'instid': 'xxx', 'sid': 'xxxxx', 'value': 'blabla' }" }
 		// cmd = { 'key': 'xxxx', 'zid': 'xxxx', 'cmd': 'device_hide', 'parms': "{ 'devid': 'xxx'  }" }
 		// cmd = { 'key': 'xxxx', 'zid': 'xxxx', 'cmd': 'device_unhide', 'parms': "{ 'devid': 'xxx'  }" }
@@ -109,6 +110,12 @@ function handleCommand(resp)
 		if (cmd.cmd == 'on' || cmd.cmd == 'off') {
 			if ((sens = _getSensorFromCmd(parms)) === false) continue;
 			sens.sendCommand(cmd.cmd, false);
+			continue;
+		}
+		if (cmd.cmd == 'exact') {
+			if ((sens = _getSensorFromCmd(parms)) === false) continue;
+			// Build a request with all keys except devid/instid/sid
+			sens.sendCommand(cmd.cmd + '?level=' + parms.level, false);
 			continue;
 		}
 		if (cmd.cmd == 'sensor_setdescr') {
