@@ -200,6 +200,7 @@ function sendFullDeviceList(body)
 	if (!body) { return; }
 	var data = _fillData(body, 'sensors');
 	scheduler.updateStatus(body);
+	domopi.setAutomationRules(domopi.getAutomationRules());
 	proxy.mkpost('/poller/events', JSON.stringify(data), function(resp) {
 		if (resp === false) {
 			logger.info('FullDeviceList not sent: retry...');

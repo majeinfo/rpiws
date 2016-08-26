@@ -44,7 +44,7 @@ function _checkForNewDevice(data) {
         	var sens = sensor.findSensor(data[i].devid, data[i].instid, data[i].sid);
 		if (!sens) {
 			logger.info('New Device detected : ' + data[i].devid + ' ' + data[i].instid + ' ' + data[i].sid);
-			sens = sensor.updateSensors(data[i].devid, data[i].instid, data[i].sid, data);
+			sens = sensor.updateSensor(data[i].devid, data[i].instid, data[i].sid, data[i]);
 			_foundDevices.push(sens);
 		}
         }

@@ -120,7 +120,7 @@ function _doActions(rule) {
 	for (var i in rule.actions) {
 		var action = rule.actions[i];
 		if (!('actiontype' in action)) {
-			logger.error('Action is missing an actiontype:' + rule.description);
+			logger.error('Action is missing an actiontype: ' + rule.description);
 			return; 
 		}
 
@@ -172,7 +172,7 @@ function _undoActions(rule) {
 	for (var i in rule.actions) {
 		var action = rule.actions[i];
 		if (!('actiontype' in action)) {
-			logger.error('Action is missing an actiontype:' + rule.description);
+			logger.error('Action is missing an actiontype: ' + rule.description);
 			return; 
 		}
 
@@ -223,30 +223,30 @@ function _checkRules() {
 
 	for (var i in autorules) {
 		var rule = autorules[i];
-		logger.debug('Check Rule: ' + rule.description);
+		logger.info('Check Rule: ' + rule.description);
 		if (!rule.isActive()) {
-			logger.debug('rule is not active');
+			logger.info('rule is not active');
 			continue;
 		}
 		if (!rule.isValid()) {
-			logger.debug('rule is not valid');
+			logger.error('rule is not valid');
 			continue;
 		}
 		if (_ruleSatisfied(rule)) {
 			// The Rule must be played if not already triggered
 			if (!rule.isTriggered()) {
-				logger.debug('Rule satisfied !');
+				logger.info('Rule satisfied !');
 				_doActions(rule);
 				rule.setTrigger();
 			}
 			else {
-				logger.debug('Rule satisfied but already triggered !');
+				logger.info('Rule satisfied but already triggered !');
 			}
 		}
 		else {
 			// The Rule must be "unplayed" if already triggered
 			if (rule.isTriggered()) {
-				logger.debug('Rule unsatisfied !');
+				logger.info('Rule unsatisfied !');
 				_undoActions(rule);
 				rule.unsetTrigger();
 			}
@@ -260,7 +260,7 @@ function _checkRules() {
 // Handle the current status of sensors
 function updateStatus(data) {
 	for (var i in data) {
-		sensor.updateSensors(data[i].devid, data[i].instid, data[i].sid, data[i]);
+		sensor.updateSensor(data[i].devid, data[i].instid, data[i].sid, data[i]);
 	}
 	_checkRules();
 }

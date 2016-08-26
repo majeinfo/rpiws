@@ -1,5 +1,8 @@
 // ------------------------------------
 // Manage the Domopi Configuration
+//
+// TODO: Rules should have an ID and
+// 	 not a Description as a key
 // ------------------------------------
 //
 var fs = require('fs'),
@@ -226,31 +229,56 @@ exports.getAutomationRules = function() {
 }
 
 // Set the Automation Rules
-// TODO: quand les rules sont redéfinies, il faut conserver l'état des rules précédentes (même description ?)
-// pour ne pas les rejouer
 exports.setAutomationRules = function(rules) {
-	logger.debug('setAutomationRules');
+	logger.info('Memorize new Automation Rules');
 	var conf = exports.getDomopiConf();
+
+	// Before overwriting rules with the new ones, we must
+	// memorize the already triggered ones (this is not perfect
+	// because the Rules are recognized according to their
+	// description... which may be modified)
+
+	// Save the trigger flag
+	var old_rules = m_rules.getRules();
+	var r_desc = {};
+	for (var idx in old_rules) {
+		r_desc[old_rules[idx].description] = old_rules[idx].isTriggered();
+	}
+
+	// Set the new rules
 	conf['rules'] = rules;
 	exports.setDomopiConf(conf);
 
 	// Re-create the Rules objects
 	m_rules.flushRules();
-	for (var r in rules) { m_rules.addRule(rules[r]); }
+	for (var idx in rules) { m_rules.addRule(rules[idx]); }
+
+	// Restore the trigger flag
+	var new_rules = m_rules.getRules();
+	for (var idx in new_rules) {
+		var desc = new_rules[idx].description;
+		if ((desc in r_desc) && r_desc[desc]) {
+			new_rules[idx].setTrigger();
+		}
+	}
 
 	// Add the implicit Rules !
+	if (!('user' in conf) || !conf['user'].email) return;
 
 	// 1-check the battery level of all Sensor
 	var allsensors = sensors.getSensors();
 	var globconf = exports.getGlobalConf()['implicit_rules']['low_battery'];
+	logger.info('Apply Low Battery implicit Rule');
 	for (var sens in allsensors) {
-		logger.debug('Sensor type: ' + allsensors[sens]['data'].devtype);
-		if (allsensors[sens]['data'].devtype == 'battery') {
-			var sname = allsensors[sens].getSimplename();
+		logger.debug('Sensor type: ' + allsensors[sens]['data'].deviceType);
+		if (allsensors[sens]['data'].deviceType == 'battery') {
+			var sensor = allsensors[sens];
+			var sname = sensor.getSimpleName();
 			var descr = 'Battery of ' + sname;
-			var cond = { condtype: 'thresholdcond', testtype: '<=', value: globconf.low_level };
-			var act = { acttype: 'emailcmd', subject: globconf.email_subject, content: globconf.email_content };
+			var cond = { condtype: 'thresholdcond', testtype: '<=', value: globconf.low_level, devid: sensor.devid, instid: sensor.instid, sid: sensor.sid  };
+			var act = { actiontype: 'emailcmd', email: conf['user'].email, subject: globconf.email_subject, content: globconf.email_content };
 			var r = { is_implicit: true, description: descr, conditions: [cond], actions: [act] };
+			logger.info('Add implicit Rule for Battery Checking of: ', sname);
 			m_rules.addRule(r);
 		}
 	}
@@ -316,6 +344,7 @@ exports.getMyLocalIP = function() {
 }
 
 // Load the Rules at the start :
-exports.setAutomationRules(exports.getAutomationRules());
+// No: we must wait for the full device list
+//exports.setAutomationRules(exports.getAutomationRules());
 
 // EOF 

@@ -97,19 +97,20 @@ function findSensorsForDevice(devid) {
 }
 
 // Memorize a new sensor or update an old one
-function updateSensors(devid, instid, sid, data) {
+function updateSensor(devid, instid, sid, data) {
 	var sens;
-	logger.debug('updateSensors:', devid, instid, sid, data);
+	logger.debug('updateSensor:', devid, instid, sid, data);
 	if ((sens = findSensor(devid, instid, sid)) === false) {
 		sens = new Sensor(devid, instid, sid);
 		mySensors.push(sens);
 	}
 	sens.data = data;
+	domopi.setSensorConf(devid, instid, sid, data);
 	return sens;
 }
 
 module.exports.getSensors = function() { return mySensors; }
-module.exports.updateSensors = updateSensors;
+module.exports.updateSensor = updateSensor;
 module.exports.findSensor = findSensor;
 module.exports.findSensorsForDevice = findSensorsForDevice;
 module.exports.Sensor = Sensor;
