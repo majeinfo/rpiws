@@ -35,7 +35,7 @@ module.exports.doCondition = function(cond) {
 		return false;
 	}
 	if (!condtime) {
-		logger.info('Suntime has not been determined yet !');
+		logger.info('Suntime Values have not been determined yet !');
 		return false;
 	}
 

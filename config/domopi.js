@@ -226,6 +226,8 @@ exports.getAutomationRules = function() {
 }
 
 // Set the Automation Rules
+// TODO: quand les rules sont redéfinies, il faut conserver l'état des rules précédentes (même description ?)
+// pour ne pas les rejouer
 exports.setAutomationRules = function(rules) {
 	logger.debug('setAutomationRules');
 	var conf = exports.getDomopiConf();

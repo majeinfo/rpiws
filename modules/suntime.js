@@ -11,7 +11,7 @@ var nextSunRise = null;
 var lastUpdate = null;
 
 function getSunTime() {
-	logger.debug('getSunTime');
+	logger.info('Try to get Sun Time');
 	var curtime = (new Date()).getTime();
 	logger.debug(lastUpdate, nextSunSet, curtime);
 	if (lastUpdate && nextSunSet) {
@@ -45,6 +45,8 @@ function getSunTime() {
 					nextSunRise = obj.results['sunrise'];
 					nextSunSet = obj.results['sunset'];
 					lastUpdate = curtime;
+					logger.info('Next sunrise value=', nextSunRise)
+					logger.info('Next sunset value=', nextSunSet)
 				}
 			}
                 });
@@ -53,12 +55,12 @@ function getSunTime() {
                 logger.error('problem with request: ' + e.message);
                 if (next) next(false)
         });
-
 }
 
 // Check for sunset & sunrise time at least once a day
 getSunTime();
-setInterval(getSunTime, 60*60*1000);	// Every hour
+setInterval(getSunTime, 60*60*12*1000);// Every 12 hours
+//setInterval(getSunTime, 60*60*1000);	// Every hour
 //setInterval(getSunTime, 10 * 1000);	// Every ten seconds
 
 exports.getSunRise = function() { return nextSunRise; }
