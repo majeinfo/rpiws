@@ -42,7 +42,7 @@ module.exports.doCondition = function(cond) {
 	// Convert the condtime into minutes and same conversion for curdate 
 	var curmin = curdate.getUTCHours() * 60 + curdate.getUTCMinutes();
 	try {
-		var sundate = new Date('2000/01/01 ' + condtime + ' UTC');
+		var sundate = new Date(curdate.getUTCFullYear().toString() + '/' + (curdate.getUTCMonth()+1).toString() + '/' + curdate.getUTCDate().toString() + ' ' + condtime + ' UTC');
 		var sunmin = sundate.getUTCHours() * 60 + sundate.getUTCMinutes();
 		if (cond.sunoffset && cond.sundelay) {
 			if (cond.sunoffset == 'before') sunmin -= cond.sundelay;
