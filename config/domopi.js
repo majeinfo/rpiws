@@ -277,7 +277,7 @@ exports.setAutomationRules = function(rules) {
 			var descr = 'Battery of ' + sname;
 			var cond = { condtype: 'thresholdcond', testtype: '<=', value: globconf.low_level, devid: sensor.devid, instid: sensor.instid, sid: sensor.sid  };
 			var act = { actiontype: 'emailcmd', email: conf['user'].email, subject: globconf.email_subject, content: globconf.email_content };
-			var r = { is_implicit: true, description: descr, conditions: [cond], actions: [act] };
+			var r = { is_implicit: true, description: descr, frequency: 60*60*24, conditions: [cond], actions: [act] };
 			logger.info('Add implicit Rule for Battery Checking of: ', sname);
 			m_rules.addRule(r);
 		}

@@ -10,7 +10,7 @@ var domopi = require('../../config/domopi'),
 var _expectedParms = [ 'devid', 'instid', 'sid' ];
 module.exports.expectedParms = _expectedParms;
 
-module.exports.doAction = function(action) {
+module.exports.doAction = function(action, rule) {
 	logger.debug('should send a Command to Sensor: ' + action.devid + action.instid + action.sid);
 	var sens = new sensor.findSensor(action.devid, action.instid, action.sid);
 	if (!sens) {	// TODO: could be made at the upper level
@@ -27,8 +27,18 @@ module.exports.doAction = function(action) {
 	return true;
 };
 
-module.exports.undoAction = function(action) {
+module.exports.undoAction = function(action, rule) {
 	logger.debug('should send a Command to Sensor: ' + action.devid + action.instid + action.sid);
+
+	// No UNDO with suntime condition :
+        for (var i in rule.conditions) {
+                var cond = rule.conditions[i];
+		if (cond.condtype == 'suntimecond') {
+			logger.info('No UNDO with suntimecond');
+			return true;
+		}
+	}
+
 	var sens = new sensor.findSensor(action.devid, action.instid, action.sid);
 	if (!sens) {	// TODO: could be made at the upper level
 		logger.info('sensor not found in sensorcmd doAction');
