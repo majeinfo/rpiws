@@ -243,6 +243,8 @@ function _checkRules() {
 				// if Rule has a frequency, check if actions must be redone again
 				// useful for "low battery condition"
 				var freq = rule.getActionFrequency();
+				logger.debug('Rule Frequency: ', freq);
+				logger.debug((new Date().getTime() - rule.getTriggeredTime()) > freq);
 				if (freq && (new Date().getTime() - rule.getTriggeredTime()) > freq) {
 					logger.info('Rule is satisfied again according to its Frequency');
 					_doActions(rule);

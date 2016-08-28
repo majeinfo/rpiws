@@ -34,6 +34,7 @@ Rule.prototype.isTriggered = function() {
 Rule.prototype.setTrigger = function() {
 	this._triggered = true;
 	this._triggered_at = new Date().getTime();
+	logger.debug('Rule triggered at: ', this._triggered_at);
 }
 Rule.prototype.unsetTrigger = function() {
 	this._triggered = false;
