@@ -44,7 +44,7 @@ for (var plug in _plugFiles) {
 // { condtype: 'timecond'|'statuscond'|'thresholdcond'|'ruleconf'|'suntimecond', ... }
 // 	if condtype == 'thresholdcond', [frequency: nb_sec], devid:, instid:, sid:, value:, testtype: '>|<|>=|<=|==|!=' 
 // 	if condtype == 'statuscond', devid:, instid:, sid:, value:'on|off', testtype: '==|!=' 
-// 	if condtype == 'timecond', starttime: 'hh:mm', endtime: 'hh:mm', days: '01234567' 
+// 	if condtype == 'timecond', starttime: 'hh:mm', days: '01234567' 
 // 	if condtype == 'suntimecond', when: 'sunrise'|'sunset', delta: 'minutes', offset: '+|-', random: '0|1'
 // ACTION format: (default AND)
 // { actiontype: 'sensorcmd'|'customcmd', ... }

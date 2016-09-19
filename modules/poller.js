@@ -78,12 +78,12 @@ function handleCommand(resp)
 
 	// TODO: check the command is newer than the latest action ?
 	// Commands are contained in an Array
-	logger.debug('Commands detected !');
+	logger.info('Commands detected !');
 	var cmds = response.cmds;
 	for (i in cmds) {
 		var sens;
 		var cmd = cmds[i];
-		logger.debug('Command:', cmd);
+		logger.info('Command:', cmd);
 		// ('parms' value is a JSON string)
 		// cmd = { 'key': 'xxxx', 'zid': 'xxxx', 'cmd': 'on|off', 'parms': "{ 'devid': 'xxx', 'instid': 'xxx', 'sid': 'xxxxx' }" }
 		// cmd = { 'key': 'xxxx', 'zid': 'xxxx', 'cmd': 'exact', 'parms': "{ 'devid': 'xxx', 'instid': 'xxx', 'sid': 'xxxxx', 'level': 'xxxxx' }" }

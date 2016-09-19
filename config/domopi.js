@@ -1,6 +1,18 @@
 // ------------------------------------
 // Manage the Domopi Configuration
 //
+// Conf looks like :
+// {
+// 	"versions": {
+// 		"rules": 5,
+// 		"sensors": 2,
+// 		"user": 1
+// 	},
+// 	"rules": [ ],
+// 	"sensors": { },
+// 	"user": { }
+// }
+//
 // TODO: Rules should have an ID and
 // 	 not a Description as a key
 // ------------------------------------
