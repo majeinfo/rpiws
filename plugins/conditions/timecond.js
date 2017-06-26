@@ -48,10 +48,12 @@ module.exports.doCondition = function(cond) {
 	curdate2 = curdate2.tz('UTC');
 	starttime = curdate2.hours() * 60 + curdate2.minutes();
 
+	/* endtime not used anymore
 	d.setHours(parseInt(parts_end[0]));
 	d.setMinutes(parseInt(parts_end[1]));
 	curdate2 = moment.tz(d, "Europe/Paris");
 	curdate2 = curdate2.tz('UTC');
+	*/
 	//endtime = curdate2.hours() * 60 + curdate2.minutes();
 	//logger.debug('(UTC) starttime:', starttime, 'endtime:', endtime);
 	logger.debug('(UTC) starttime:', starttime);
